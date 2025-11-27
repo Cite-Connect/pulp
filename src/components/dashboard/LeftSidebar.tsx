@@ -5,9 +5,14 @@ import styled from 'styled-components';
 import { FiGrid, FiBookmark, FiSettings, FiClock } from 'react-icons/fi';
 
 export default function LeftSidebar() {
+    const handleClick = () => {
+        // Handle brand click, e.g., navigate to dashboard home
+        window.location.href = '/';
+    };
+
     return (
         <Panel>
-        <Brand>CiteConnect</Brand>
+        <Brand onClick={handleClick}>CiteConnect</Brand>
         
         <SectionTitle>Menu</SectionTitle>
         <NavItem $active>
@@ -49,6 +54,7 @@ const Brand = styled.div`
     color: white;
     margin-bottom: 2.5rem;
     letter-spacing: -0.025em;
+    cursor: pointer;
 `;
 
 const SectionTitle = styled.h3`

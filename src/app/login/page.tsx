@@ -7,68 +7,68 @@ import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 
 export default function LoginPage() {
-const router = useRouter();
-const resetStore = useOnboardingStore((state) => state.reset);
+    const router = useRouter();
+    const resetStore = useOnboardingStore((state) => state.reset);
 
-const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    resetStore();
-    
-    router.push('/dashboard');
-};
+    const handleLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        resetStore();
+        
+        router.push('/dashboard');
+    };
 
-const handleCreateAccount = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    resetStore();
-    
-    router.push('/onboarding/step1');
-};
+    const handleCreateAccount = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        resetStore();
+        
+        router.push('/onboarding/step1');
+    };
 
-return (
-    <PageContainer>
-        <LoginCard>
-            <Header>
-            <Title>CiteConnect</Title>
-            <Subtitle>Your AI-powered research assistant</Subtitle>
-            </Header>
-            
-            <FormSection>
-            <GoogleButton type="button" onClick={handleLogin}>
-                <Image 
-                src="https://www.svgrepo.com/show/475656/google-color.svg" 
-                alt="Google logo"
-                height={10}
-                width={10}
-                />
-                Sign in with Google
-            </GoogleButton>
-
-            <Divider>
-                <Line />
-                <DividerText>Or continue with</DividerText>
-                <Line />
-            </Divider>
-
-            <Form onSubmit={handleLogin}>
-                <InputGroup>
-                <Label htmlFor="email" $required>Email address</Label>
-                <Input id="email" type="email" placeholder="Email address" />
-                </InputGroup>
+    return (
+        <PageContainer>
+            <LoginCard>
+                <Header>
+                <Title>CiteConnect</Title>
+                <Subtitle>Your AI-powered research assistant</Subtitle>
+                </Header>
                 
-                <InputGroup>
-                <Label htmlFor="password" $required>Password</Label>
-                <Input id="password" type="password" placeholder="Password" />
-                </InputGroup>
+                <FormSection>
+                <GoogleButton type="button" onClick={handleLogin}>
+                    <Image 
+                    src="https://www.svgrepo.com/show/475656/google-color.svg" 
+                    alt="Google logo"
+                    height={10}
+                    width={10}
+                    />
+                    Sign in with Google
+                </GoogleButton>
 
-                <PrimaryButton type="submit">Sign in</PrimaryButton>
-                <PrimaryButton onClick={handleCreateAccount}>Create Account</PrimaryButton>
-            </Form>
-            </FormSection>
-        </LoginCard>
-    </PageContainer>
-);
+                <Divider>
+                    <Line />
+                    <DividerText>Or continue with</DividerText>
+                    <Line />
+                </Divider>
+
+                <Form onSubmit={handleLogin}>
+                    <InputGroup>
+                    <Label htmlFor="email" $required>Email address</Label>
+                    <Input id="email" type="email" placeholder="Email address" />
+                    </InputGroup>
+                    
+                    <InputGroup>
+                    <Label htmlFor="password" $required>Password</Label>
+                    <Input id="password" type="password" placeholder="Password" />
+                    </InputGroup>
+
+                    <PrimaryButton type="submit">Sign in</PrimaryButton>
+                    <PrimaryButton onClick={handleCreateAccount}>Create Account</PrimaryButton>
+                </Form>
+                </FormSection>
+            </LoginCard>
+        </PageContainer>
+    );
 }
 
 const PageContainer = styled.div`
