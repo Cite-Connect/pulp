@@ -8,7 +8,6 @@ import { FiSearch, FiShare2, FiCpu, FiArrowRight, FiCheck } from 'react-icons/fi
 export default function Home() {
   return (
     <Container>
-      {/* 1. HERO SECTION */}
       <HeroSection>
         <Nav>
           <Logo>CiteConnect</Logo>
@@ -43,7 +42,6 @@ export default function Home() {
             </SecondaryCta>
           </ButtonGroup>
 
-          {/* Abstract Visual Representation of a Graph */}
           <VisualContainer>
             <FloatingCard $top={20} $left={10} $delay={0}>
               <FiSearch size={24} />
@@ -65,7 +63,6 @@ export default function Home() {
         </HeroContent>
       </HeroSection>
 
-      {/* 2. VALUE PROPOSITION */}
       <FeaturesSection id="features">
         <SectionHeader>
           <SectionLabel>The Platform</SectionLabel>
@@ -108,7 +105,6 @@ export default function Home() {
         </FeatureGrid>
       </FeaturesSection>
 
-      {/* 3. COMPARISON / PROBLEM SECTION */}
       <ComparisonSection>
         <ComparisonContainer>
           <LeftComp>
@@ -133,7 +129,6 @@ export default function Home() {
         </ComparisonContainer>
       </ComparisonSection>
 
-      {/* 4. FOOTER */}
       <Footer>
         <FooterContent>
           <Logo>CiteConnect</Logo>
