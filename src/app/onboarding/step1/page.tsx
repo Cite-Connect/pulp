@@ -10,13 +10,23 @@ const DOMAIN_OPTIONS = ['Finance', 'Healthcare', 'Quantum Computing'];
 export default function Step1Page() {
   const router = useRouter();
   
-  const { 
+  const {
+    email, setEmail,
+    password, setPassword,
     role, setRole, 
     institution, setInstitution, 
     domain, setDomain 
   } = useOnboardingStore();
 
   const handleNext = () => {
+    if (!email) {
+      alert("Please enter your email address.");
+      return;
+    }
+    if (!password) {
+      alert("Please enter your password.");
+      return;
+    }
     if (!role || role === 'Select your role...') {
       alert("Please select a role to continue.");
       return;
@@ -38,12 +48,12 @@ export default function Step1Page() {
       <Form>
         <InputGroup>
           <Label htmlFor="email" $required>Email address</Label>
-          <Input id="email" type="email" placeholder="Email address" />
+          <Input id="email" type="email" value={email} placeholder="Email address" onChange={(e) => setEmail(e.target.value)} />
         </InputGroup>
                 
         <InputGroup>
           <Label htmlFor="password" $required>Password</Label>
-          <Input id="password" type="password" placeholder="Password" />
+          <Input id="password" type="password" value={password} placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
         </InputGroup>
 
         <FormGroup>
