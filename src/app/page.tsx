@@ -135,7 +135,7 @@ export default function Home() {
           <FooterLinks>
             <FooterLink href="#">Privacy Policy</FooterLink>
             <FooterLink href="#">Terms of Service</FooterLink>
-            <FooterLink href="https://github.com/DhikshaMathanagopal/CiteConnect">GitHub</FooterLink>
+            <FooterLink href="https://github.com/Cite-Connect">GitHub</FooterLink>
           </FooterLinks>
           <Copyright>© 2025 CiteConnect. Built for Research.</Copyright>
         </FooterContent>
