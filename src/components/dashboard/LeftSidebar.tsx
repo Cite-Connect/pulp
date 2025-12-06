@@ -2,7 +2,7 @@
 
 import React from 'react';
 import styled from 'styled-components';
-import { FiGrid, FiBookmark, FiSettings, FiClock } from 'react-icons/fi';
+import { FiGrid, FiBookmark, FiSettings } from 'react-icons/fi';
 import { usePathname } from 'next/navigation';
 
 export default function LeftSidebar() {
@@ -17,7 +17,7 @@ export default function LeftSidebar() {
         <Brand onClick={handleClick}>CiteConnect</Brand>
         
         <SectionTitle>Menu</SectionTitle>
-        <NavItem onClick={() => window.location.href = ''} $active={pathname === '/dashboard'}>
+        <NavItem onClick={() => window.location.href = '/dashboard'} $active={pathname === '/dashboard'}>
             <FiGrid /> <span>Dashboard</span>
         </NavItem>
         <NavItem onClick={() => window.location.href = '/library'} $active={pathname === '/library'}>
