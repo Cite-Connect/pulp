@@ -3,25 +3,27 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FiGrid, FiBookmark, FiSettings, FiClock } from 'react-icons/fi';
+import { usePathname } from 'next/navigation';
 
 export default function LeftSidebar() {
+    const pathname = usePathname();
     const handleClick = () => {
         // Handle brand click, e.g., navigate to dashboard home
         window.location.href = '/';
     };
 
     return (
-        <Panel>
+    <Panel>
         <Brand onClick={handleClick}>CiteConnect</Brand>
         
         <SectionTitle>Menu</SectionTitle>
-        <NavItem $active onClick={() => window.location.href = ''}>
+        <NavItem onClick={() => window.location.href = ''} $active={pathname === '/dashboard'}>
             <FiGrid /> <span>Dashboard</span>
         </NavItem>
-        <NavItem>
+        <NavItem onClick={() => window.location.href = '/library'} $active={pathname === '/library'}>
             <FiBookmark /> <span>My Library</span>
         </NavItem>
-        <NavItem onClick={() => window.location.href = '/settings'}>
+        <NavItem onClick={() => window.location.href = '/settings'} $active={pathname === '/settings'}>
             <FiSettings /> <span>Settings</span>
         </NavItem>
 
@@ -34,7 +36,7 @@ export default function LeftSidebar() {
             <HistoryTitle>Quantum Error Correction</HistoryTitle>
             <HistoryMeta>Viewed 5h ago</HistoryMeta>
         </HistoryItem>
-        </Panel>
+    </Panel>
     );
 }
 

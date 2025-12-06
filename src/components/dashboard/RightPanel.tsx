@@ -2,27 +2,35 @@
 
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import Loader from '@/components/common/Loader';
+import { FiBookmark, FiThumbsUp, FiThumbsDown, FiCheck } from 'react-icons/fi';
 import { useSelectionStore } from '@/store/useSelectionStore';
+import { useLibraryStore } from '@/store/useLibraryStore'; 
 import { fetchPaperDetails } from '@/api/services/paper';
 import { PaperDetails } from '@/api/interface/types';
+import Loader from '@/components/common/Loader';
 
+// --- Component ---
 export default function RightPanel() {
     const selectedNode = useSelectionStore((state) => state.selectedNode);
+    
+    // 1. Get the list of saved papers + toggle action
+    const { savedPapers, toggleSave } = useLibraryStore();
+
     const [details, setDetails] = useState<PaperDetails | null>(null);
     const [loading, setLoading] = useState(false);
+    const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
 
-    // Fetch full details when a node is selected
+    // 2. Fetch Details when selection changes
     useEffect(() => {
         const loadDetails = async () => {
         if (!selectedNode) return;
         
-        // Reset details when selection changes so we don't show old data
         setDetails(null); 
-        
+        setFeedback(null);
+
         try {
             setLoading(true);
-            // Ensure we are using the ID correctly
+            // Ensure ID is passed as a string
             const data = await fetchPaperDetails(String(selectedNode.id));
             setDetails(data);
         } catch (err) {
@@ -43,26 +51,19 @@ export default function RightPanel() {
         );
     }
 
+    // 3. Loading State (Generic Loader)
     if (loading) {
-    return (
+        return (
         <PanelContainer>
-            {/* The new generic loader goes here */}
-            <Loader text="Fetching paper details..." size={40} />
+            <Loader text="Fetching details..." size={40} />
         </PanelContainer>
         );
     }
 
-  // --- THE FIX IS HERE ---
-  // We create a "safe" fallback object that maps Graph data to the API structure.
+    // 4. Smart Fallback Logic (Prevents flickering titles)
     const fallbackData = selectedNode ? {
-        // 1. Copy existing fields
         ...selectedNode,
-        
-        // 2. Map 'label' (Graph) -> 'title' (UI)
-        // This ensures the title shows up INSTANTLY without flickering
-        title: selectedNode.label, 
-        
-        // 3. Provide strict defaults for missing API fields
+        title: selectedNode.label || "Untitled Paper", // Map label -> title
         matching_aspects: [] as string[],
         tldr: null,
         quality_score: 0,
@@ -70,12 +71,20 @@ export default function RightPanel() {
         abstract: "",
         year: selectedNode.year || new Date().getFullYear(),
         citation_count: selectedNode.citation_count || 0,
-        domain: selectedNode.domain || 'Paper'
+        domain: selectedNode.domain || 'Research'
     } : null;
 
-  // Use API details if loaded, otherwise use the smart fallback.
-  // We use 'as unknown' to safely bypass strict structure checks without using 'any'
     const display = details || (fallbackData as unknown as PaperDetails);
+
+    // 5. Individual Save Check
+    // Is *this specific paper* in the user's library?
+    const isPaperSaved = savedPapers.some((p) => p.id === display.id);
+
+    // Handlers
+    const handleFeedback = (type: 'like' | 'dislike') => {
+        setFeedback(prev => (prev === type ? null : type));
+        // TODO: Add API call here
+    };
 
     return (
         <PanelContainer>
@@ -83,19 +92,38 @@ export default function RightPanel() {
         <div style={{ marginBottom: '1rem' }}>
             <Badge>{display.domain}</Badge>
             {display.quality_score && display.quality_score > 0 && (
-                <span style={{ fontSize: '0.75rem', color: '#666' }}>
-                    Score: {Math.round(display.quality_score * 100)}%
-                </span>
+            <span style={{ fontSize: '0.75rem', color: '#666' }}>
+                Score: {Math.round(display.quality_score * 100)}%
+            </span>
             )}
         </div>
 
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem', lineHeight: '1.3' }}>
             {display.title}
         </h2>
 
-        <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>
+        <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>
             {display.year} • {display.citation_count} Citations
         </p>
+
+        {/* --- ACTION BAR --- */}
+        <ActionRow>
+            <ActionButton 
+            onClick={() => toggleSave(display)} 
+            $active={isPaperSaved}
+            >
+            {isPaperSaved ? <FiCheck size={14} /> : <FiBookmark size={14} />}
+            {isPaperSaved ? 'Saved' : 'Save'}
+            </ActionButton>
+
+            <ActionButton onClick={() => handleFeedback('like')} $active={feedback === 'like'}>
+            <FiThumbsUp size={14} />
+            </ActionButton>
+
+            <ActionButton onClick={() => handleFeedback('dislike')} $active={feedback === 'dislike'}>
+            <FiThumbsDown size={14} />
+            </ActionButton>
+        </ActionRow>
 
         {/* TLDR Section */}
         {display.tldr && (
@@ -117,9 +145,29 @@ export default function RightPanel() {
         )}
 
         <h4 style={{ fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>ABSTRACT</h4>
-        <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: '#444' }}>
+        <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: '#444', marginBottom: '2rem' }}>
             {display.abstract || "No abstract available."}
         </p>
+
+        {/* Primary Action Button (Bottom) */}
+        <div style={{ marginTop: 'auto' }}>
+            <button 
+            onClick={() => toggleSave(display)}
+            style={{ 
+                width: '100%', 
+                padding: '12px', 
+                background: isPaperSaved ? '#e3f2fd' : '#1a1a1a', 
+                color: isPaperSaved ? '#1565c0' : 'white', 
+                border: isPaperSaved ? '1px solid #2196f3' : 'none',
+                borderRadius: '6px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+            }}
+            >
+                {isPaperSaved ? 'Remove from Library' : 'Add to Library'}
+            </button>
+        </div>
 
         </PanelContainer>
     );
@@ -172,4 +220,36 @@ const TldrBox = styled.div`
     font-size: 0.85rem;
     color: #333;
     font-style: italic;
+    line-height: 1.4;
+`;
+
+// --- Action Bar Styles ---
+const ActionRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0 1.5rem 0;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+`;
+
+const ActionButton = styled.button<{ $active?: boolean }>`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: ${props => props.$active ? '#e3f2fd' : 'transparent'};
+    border: 1px solid ${props => props.$active ? '#2196f3' : '#eaeaea'};
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: ${props => props.$active ? '#1565c0' : '#666'};
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: #f5f5f5;
+        border-color: #d0d0d0;
+        color: #333;
+    }
 `;
