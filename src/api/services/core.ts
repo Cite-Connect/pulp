@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const apiClient = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://citeconnect-backend-api-897523647765.us-central1.run.app/api/v1', 
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://localhost:8000/api/v1', 
     headers: {
         'Content-Type': 'application/json',
     },
