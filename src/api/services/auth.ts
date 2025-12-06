@@ -1,17 +1,17 @@
-import { apiClient } from './core';
+import { apiClientV1 } from './core';
 import { LoginPayload, RegisterPayload, AuthResponse } from '../interface/types';
 
 export const authApi = {
   // POST /register
     register: async (payload: RegisterPayload) => {
-        const response = await apiClient.post<AuthResponse>('/users/register', payload);
+        const response = await apiClientV1.post<AuthResponse>('/users/register', payload);
         return response.data;
     },
 
   // POST /login
     login: async (payload: LoginPayload) => {
         // Note: Your notebook wrote 'pass:', assuming standard 'password' key here.
-        const response = await apiClient.post<AuthResponse>('/users/login', payload);
+        const response = await apiClientV1.post<AuthResponse>('/users/login', payload);
         return response.data;
     },
 

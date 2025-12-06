@@ -1,13 +1,13 @@
 import axios from 'axios';
 
-export const apiClient = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://localhost:8000/api/v1', 
+export const apiClientV1 = axios.create({
+    baseURL: '/api/v1', // This now routes to your backend via the rewrite
     headers: {
-        'Content-Type': 'application/json',
+    'Content-Type': 'application/json',
     },
 });
 
-apiClient.interceptors.request.use(
+apiClientV1.interceptors.request.use(
     (config) => {
         const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
         
@@ -19,7 +19,7 @@ apiClient.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-apiClient.interceptors.response.use(
+apiClientV1.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
