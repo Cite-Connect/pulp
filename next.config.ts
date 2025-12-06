@@ -4,7 +4,7 @@ const nextConfig = {
     styledComponents: true,
   },
   async rewrites() {
-    const apiUrl = process.env.API_BASE_URL || '';
+    const apiUrl = process.env.API_BASE_URL || 'https://citeconnect-backend-api-897523647765.us-central1.run.app/api/v1';
 
     return [
       {
