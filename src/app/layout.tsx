@@ -2,7 +2,7 @@
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import StyledComponentsRegistry from '../lib/registry';
-import GlobalStyles from '@/app/styles/GlobalStyles';
+import GlobalStyles from './styles/GlobalStyles';
 
 // Configure the font
 const jakarta = Plus_Jakarta_Sans({
