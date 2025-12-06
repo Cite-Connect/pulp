@@ -15,13 +15,13 @@ export default function LeftSidebar() {
         <Brand onClick={handleClick}>CiteConnect</Brand>
         
         <SectionTitle>Menu</SectionTitle>
-        <NavItem $active>
+        <NavItem $active onClick={() => window.location.href = ''}>
             <FiGrid /> <span>Dashboard</span>
         </NavItem>
         <NavItem>
             <FiBookmark /> <span>My Library</span>
         </NavItem>
-        <NavItem onClick={() => window.location.href = '/dashboard/settings'}>
+        <NavItem onClick={() => window.location.href = '/settings'}>
             <FiSettings /> <span>Settings</span>
         </NavItem>
 

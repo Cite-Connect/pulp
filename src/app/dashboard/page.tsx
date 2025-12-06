@@ -2,52 +2,40 @@
 
 import React from 'react';
 import styled from 'styled-components';
+import CitationGraph from '@/components/dashboard/CitationGraph';
 
-import LeftSidebar from '@/components/dashboard/LeftSidebar';
-import RightPanel from '@/components/dashboard/RightPanel';
-import FloatingSearch from '@/components/dashboard/FloatingSearch';
-import AuthGuard from '@/components/auth/AuthGuard';
+// Simple styling for the dashboard content area
+const DashboardContainer = styled.div`
+    padding: 2rem;
+    width: 100%;
+    height: 100%;
+`;
 
-export default function DashboardLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+const Header = styled.div`
+    margin-bottom: 2rem;
+    
+    h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+    }
+    
+    p {
+        color: #666;
+    }
+`;
+
+export default function DashboardPage() {
     return (
-        <AuthGuard>
-            <GridContainer>
-                <LeftSidebar />
-                <ContentWrapper>
-                    <MainStage>
-                    {children}
-                    </MainStage>
-                    <RightPanel />
-                </ContentWrapper>
-                <FloatingSearch />
-            </GridContainer>
-        </AuthGuard>
+        <DashboardContainer>
+            <Header>
+                <h1>Citation Network</h1>
+                <p>Visualizing relationships for paper: Medical Imaging Transfer Learning</p>
+            </Header>
+            
+            {/* This renders the graph component we built */}
+            <CitationGraph />
+        </DashboardContainer>
     );
 }
-
-
-const GridContainer = styled.div`
-    display: grid;
-    grid-template-columns: 260px 1fr; /* Left Sidebar | The Rest */
-    height: 100vh;
-    background-color: #f3f4f6;
-    overflow: hidden;
-`;
-
-const ContentWrapper = styled.div`
-    display: grid;
-    grid-template-columns: 1fr 340px; /* Middle Content | Right Panel */
-    height: 100vh;
-    overflow: hidden;
-`;
-
-const MainStage = styled.main`
-    padding: 2rem;
-    padding-bottom: 8rem; /* Space for the floating bar */
-    overflow-y: auto;
-    background-color: #f9fafb;
-`;
