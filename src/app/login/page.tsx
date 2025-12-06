@@ -1,72 +1,154 @@
-'use client';
+'use client'
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
+import { authApi } from '@/api/services/auth'; 
+import { AuthResponse } from '@/api/interface/types'; 
+import { getApiErrorMessage } from '@/utils/errorHandler'; // <--- 1. Import the helper
 
 export default function LoginPage() {
+    useEffect(() => {
+        localStorage.clear();
+    }, []);
+
     const router = useRouter();
     const resetStore = useOnboardingStore((state) => state.reset);
 
-    const handleLogin = (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        resetStore();
-        
-        router.push('/dashboard');
+    // State to toggle between Login and Register views
+    const [isRegistering, setIsRegistering] = useState(false);
+    
+    // Form Data
+    const [formData, setFormData] = useState({ email: '', password: '', fullName: '' });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [apiError, setApiError] = useState<string | null>(null);
+
+    // Simple validation
+    const validate = () => {
+        if (!formData.email || !formData.password) return false;
+        if (isRegistering && !formData.fullName) return false;
+        return true;
     };
 
-    const handleCreateAccount = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setApiError(null);
+
+        if (!validate()) {
+            setApiError("Please fill in all required fields.");
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+        let result: AuthResponse;
         
+        if (isRegistering) {
+            // --- REGISTER ---
+            result = await authApi.register({
+                email: formData.email,
+                password: formData.password,
+                full_name: formData.fullName
+            });
+        } else {
+            // --- LOGIN ---
+            result = await authApi.login({
+                email: formData.email,
+                password: formData.password
+            });
+        }
+
+        // --- HANDLE SUCCESS ---
+        const { access_token, user_id } = result;
+        
+        authApi.saveSession(access_token, user_id);
         resetStore();
-        
-        router.push('/onboarding/step1');
+
+        if (isRegistering) {
+            router.push('/onboarding/step-1');
+        } else {
+            router.push('/dashboard'); 
+        }
+
+        } catch (err: unknown) { 
+        console.error('Auth Error:', err);
+        // 2. Use the helper here to extract the message safely
+        const msg = getApiErrorMessage(err, 'Authentication failed. Please try again.');
+        setApiError(msg);
+        } finally {
+        setIsSubmitting(false);
+        }
+    };
+
+    const toggleMode = () => {
+        setIsRegistering(!isRegistering);
+        setApiError(null);
     };
 
     return (
         <PageContainer>
-            <LoginCard>
-                <Header>
-                <Title>CiteConnect</Title>
-                <Subtitle>Your AI-powered research assistant</Subtitle>
-                </Header>
+        <LoginCard>
+            <Header>
+            <Title onClick={() => router.push('/')}>CiteConnect</Title>
+            <Subtitle>Your AI-powered research assistant</Subtitle>
+            </Header>
+            
+            <FormSection>
+
+            {apiError && <AlertBanner>{apiError}</AlertBanner>}
+
+            <Form onSubmit={handleSubmit}>
                 
-                <FormSection>
-                <GoogleButton type="button" onClick={handleLogin}>
-                    <Image 
-                    src="https://www.svgrepo.com/show/475656/google-color.svg" 
-                    alt="Google logo"
-                    height={10}
-                    width={10}
-                    />
-                    Sign in with Google
-                </GoogleButton>
-
-                <Divider>
-                    <Line />
-                    <DividerText>Or continue with</DividerText>
-                    <Line />
-                </Divider>
-
-                <Form onSubmit={handleLogin}>
+                {isRegistering && (
                     <InputGroup>
-                    <Label htmlFor="email" $required>Email address</Label>
-                    <Input id="email" type="email" placeholder="Email address" />
+                        <Label htmlFor="fullname" $required>Full Name</Label>
+                        <Input 
+                            id="fullname" 
+                            type="text" 
+                            placeholder="John Doe" 
+                            value={formData.fullName}
+                            onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                        />
                     </InputGroup>
-                    
-                    <InputGroup>
-                    <Label htmlFor="password" $required>Password</Label>
-                    <Input id="password" type="password" placeholder="Password" />
-                    </InputGroup>
+                )}
 
-                    <PrimaryButton type="submit">Sign in</PrimaryButton>
-                    <PrimaryButton onClick={handleCreateAccount}>Create Account</PrimaryButton>
-                </Form>
-                </FormSection>
-            </LoginCard>
+                <InputGroup>
+                <Label htmlFor="email" $required>Email address</Label>
+                <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="Email address" 
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                />
+                </InputGroup>
+                
+                <InputGroup>
+                <Label htmlFor="password" $required>Password</Label>
+                <Input 
+                    id="password" 
+                    type="password" 
+                    placeholder="Password" 
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                />
+                </InputGroup>
+
+                <PrimaryButton type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Processing...' : (isRegistering ? 'Create Account' : 'Sign in')}
+                </PrimaryButton>
+                
+                {/* Toggle Link */}
+                <ToggleButton type="button" onClick={toggleMode}>
+                    {isRegistering 
+                        ? "Already have an account? Sign in" 
+                        : "Don't have an account? Create one"}
+                </ToggleButton>
+            </Form>
+            </FormSection>
+        </LoginCard>
         </PageContainer>
     );
 }
@@ -100,6 +182,7 @@ const Title = styled.h2`
     letter-spacing: -0.03em;
     color: #111827;
     margin-bottom: 0.5rem;
+    cursor: pointer;
 `;
 
 const Subtitle = styled.p`
@@ -112,32 +195,6 @@ const FormSection = styled.div`
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-`;
-
-const GoogleButton = styled.button`
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.75rem 1rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    background-color: white;
-    color: #374151;
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-
-    &:hover {
-        background-color: #f9fafb;
-    }
-
-    img {
-        height: 1.25rem;
-        width: 1.25rem;
-        margin-right: 0.5rem;
-    }
 `;
 
 const Divider = styled.div`
@@ -168,7 +225,7 @@ const Form = styled.form`
 const InputGroup = styled.div`
     display: flex;
     flex-direction: column;
-    `;
+`;
 
 const Label = styled.label<{ $required?: boolean }>`
     display: block;
@@ -196,6 +253,7 @@ const Input = styled.input`
     border-radius: 0.5rem;
     color: #111827;
     font-size: 0.95rem;
+    transition: border-color 0.2s;
 
     &::placeholder {
         color: #9ca3af;
@@ -206,6 +264,17 @@ const Input = styled.input`
         border-color: #6366f1;
         box-shadow: 0 0 0 1px #6366f1;
     }
+`;
+
+const AlertBanner = styled.div`
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    text-align: center;
+    font-weight: 500;
 `;
 
 const PrimaryButton = styled.button`
@@ -224,9 +293,27 @@ const PrimaryButton = styled.button`
     transition: all 0.2s ease;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 
-    &:hover {
+    &:hover:not(:disabled) {
         background-color: #000000;
         transform: translateY(-1px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    &:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
+    }
+`;
+
+const ToggleButton = styled.button`
+    margin-top: 0.5rem;
+    background: none;
+    border: none;
+    color: #4f46e5;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    
+    &:hover {
+        text-decoration: underline;
     }
 `;

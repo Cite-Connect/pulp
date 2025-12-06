@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import LeftSidebar from '@/components/dashboard/LeftSidebar';
 import RightPanel from '@/components/dashboard/RightPanel';
 import FloatingSearch from '@/components/dashboard/FloatingSearch';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 export default function DashboardLayout({
     children,
@@ -13,24 +14,18 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     return (
-        <GridContainer>
-        {/* 1. Left Sidebar Component */}
-        <LeftSidebar />
-
-        {/* 2. Middle Content Wrapper */}
-        <ContentWrapper>
-            {/* The middle content (children) renders here */}
-            <MainStage>
-            {children}
-            </MainStage>
-
-            {/* 3. Right Panel Component */}
-            <RightPanel />
-        </ContentWrapper>
-
-        {/* 4. Floating Search Component */}
-        <FloatingSearch />
-        </GridContainer>
+        <AuthGuard>
+            <GridContainer>
+                <LeftSidebar />
+                <ContentWrapper>
+                    <MainStage>
+                    {children}
+                    </MainStage>
+                    <RightPanel />
+                </ContentWrapper>
+                <FloatingSearch />
+            </GridContainer>
+        </AuthGuard>
     );
 }
 

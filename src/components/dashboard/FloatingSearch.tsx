@@ -7,11 +7,10 @@ import { FiSearch } from 'react-icons/fi';
 export default function FloatingSearch() {
     return (
         <Container>
-        <InputWrapper>
-            <FiSearch size={20} color="#9ca3af" />
-            <Input placeholder="Ask a question or search for papers..." />
-            <KbdShortcut>⌘ K</KbdShortcut>
-        </InputWrapper>
+            <InputWrapper>
+                <FiSearch size={20} color="#9ca3af" />
+                <Input placeholder="Ask a question or search for papers..." />
+            </InputWrapper>
         </Container>
     );
 }

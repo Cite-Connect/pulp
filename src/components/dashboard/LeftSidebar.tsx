@@ -21,7 +21,7 @@ export default function LeftSidebar() {
         <NavItem>
             <FiBookmark /> <span>My Library</span>
         </NavItem>
-        <NavItem>
+        <NavItem onClick={() => window.location.href = '/dashboard/settings'}>
             <FiSettings /> <span>Settings</span>
         </NavItem>
 
