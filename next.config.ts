@@ -4,7 +4,7 @@ const nextConfig = {
     styledComponents: true,
   },
   async rewrites() {
-    const apiUrl = process.env.API_BASE_URL;
+    const apiUrl = process.env.API_BASE_URL || '';
 
     return [
       {
