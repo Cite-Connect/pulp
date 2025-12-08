@@ -5,6 +5,7 @@ interface GraphParams {
     depth?: number;
     max_nodes?: number;
     include_metadata?: boolean;
+    embedding_model?: string;
 }
 
 export const graphApi = {
@@ -13,6 +14,7 @@ export const graphApi = {
             depth: 1,
             max_nodes: 50,
             include_metadata: true,
+            embedding_model: 'specter',
             ...params, // Override defaults if specific params are passed
         };
 

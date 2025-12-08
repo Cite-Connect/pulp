@@ -2,11 +2,17 @@
 
 import React from 'react';
 import styled from 'styled-components';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FiArrowLeft, FiUser, FiGlobe, FiLogOut, FiBriefcase } from 'react-icons/fi';
 import AuthGuard from '@/components/auth/AuthGuard';
 
 export default function SettingsPage() {
+    const router = useRouter();
+    const handleLogout = () => {
+        localStorage.removeItem('authToken');
+        router.push('/login');
+    }
     return (
         <AuthGuard>
         <Container>
@@ -50,7 +56,7 @@ export default function SettingsPage() {
 
             {/* Danger Zone */}
             <Section style={{ borderColor: '#ffcdd2' }}>
-            <LogoutButton onClick={() => alert('Logging out...')}>
+            <LogoutButton onClick={() => handleLogout()}>
                 <FiLogOut /> Log Out
             </LogoutButton>
             </Section>
