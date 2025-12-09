@@ -30,3 +30,16 @@ export const authApi = {
         }
     }
 };
+
+export const getAccessToken = (): string | null => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('accessToken');
+  }
+  return null;
+};
+
+export const getAuthHeaders = (): { Authorization?: string } => {
+  const token = getAccessToken();
+  console.log("Auth Token:", token);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};

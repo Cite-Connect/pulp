@@ -20,11 +20,49 @@ export interface CreateProfilePayload {
     primary_domain: string;
     reading_level: 'Introductory' | 'Intermediate' | 'Advanced' | 'Expert';
     interests: string[]; // Min 3, Max 10
+    research_stage: string;
 
     // OPTIONAL
-    research_stage?: string;
     sub_domains?: string[];
     google_scholar_url?: string;
+    institution?: string;
+}
+
+export interface CreateProfileResponse {
+    user_id: string | number;
+    profile: UserProfile;
+    message?: string;
+}
+
+export interface GetProfileResponse {
+    user_id: string | number;
+    profile: UserProfile;
+}
+
+export interface UserProfile {
+    primary_domain: string;
+    reading_level: string;
+    interests: string[];
+    research_stage: string;
+    sub_domains: string[];
+    research_methods: string[];
+    research_goals: string[];
+    time_availability: string;
+    years_experience: number;
+    h_index: number;
+    prefers_recent_papers: boolean;
+    prefers_high_impact: boolean;
+    prefers_open_access: boolean;
+    preferred_venues: string[];
+    institution: string;
+    department: string;
+    looking_for_collaborators: boolean;
+    google_scholar_url: string;
+    semantic_scholar_author_id: string;
+    
+    user_id?: string | number;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface GraphNode {
@@ -78,7 +116,7 @@ export interface GraphDataResponse {
 }
 
 export interface PaperDetails {
-    id: string;
+    paper_id: string;
     title: string;
     abstract?: string;
     authors: string[];
@@ -92,4 +130,38 @@ export interface PaperDetails {
     tldr?: string;
     relevance_score?: number;
     matching_aspects: string[];
+}
+
+export interface RecommendationPayload {
+    user_id: number | string; // Optional if backend infers from token
+    count: number;            // Default 10
+    model_preference?: 'minilm' | 'specter' | 'scibert';
+    search_query: string;
+    session_id: string;
+}
+
+export interface ScoreBreakdown {
+    keyword: number;
+    semantic: number;
+    profile: number;
+}
+
+export interface RecommendedPaper extends PaperDetails {
+    relevance_score: number;       // 0.0 - 1.0
+    relevance_explanation?: string; // "Why we showed this"
+    match_source?: string;         // "keyword+semantic"
+    score_breakdown?: ScoreBreakdown;
+}
+
+export interface RecommendationMetadata {
+    strategy_used: string;         // "search_augmented", "cold_start", etc.
+    search_query: string | null;
+    model_used: string;
+    generation_time_ms: number;
+    evaluation_score?: number;
+}
+
+export interface RecommendationsResponse {
+    recommendations: RecommendedPaper[];
+    metadata: RecommendationMetadata;
 }

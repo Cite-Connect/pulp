@@ -1,37 +1,103 @@
 'use client';
 
-import React from 'react';
-import styled from 'styled-components';
-import { FiSearch } from 'react-icons/fi';
+import React, { useState, useEffect, useRef } from 'react';
+import styled, { keyframes } from 'styled-components';
+import { FiSearch, FiLoader } from 'react-icons/fi';
+import { paperApi } from '@/api/services/paper';
+import { generateSessionId } from '@/utils/session';
+import { useFeedStore } from '@/store/useFeedStore';
 
 export default function FloatingSearch() {
+    const [query, setQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+    
+    const { setPapers, setLoading } = useFeedStore();
+
+    useEffect(() => {
+        const handleShortcut = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                inputRef.current?.focus();
+            }
+        };
+        window.addEventListener('keydown', handleShortcut);
+        return () => window.removeEventListener('keydown', handleShortcut);
+    }, []);
+
+    const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && query.trim()) {
+            e.preventDefault();
+            
+            setIsSearching(true);
+            setLoading(true); // Show skeletons in dashboard immediately
+
+            try {
+                const userId = localStorage.getItem('userId') || Number(localStorage.getItem('userId'));
+                
+                const response = await paperApi.getRecommendations({
+                    search_query: query,
+                    user_id: Number(userId),
+                    count: 10,
+                    model_preference: 'specter',
+                    session_id: generateSessionId(userId!),
+                });
+
+                // Update the main feed with AI recommendations
+                setPapers(response.recommendations);
+                
+            } catch (err) {
+                console.error("Search failed:", err);
+                // Optional: Add toast error here
+            } finally {
+                setIsSearching(false);
+                setLoading(false);
+            }
+        }
+    };
+
     return (
         <Container>
-            <InputWrapper>
-                <FiSearch size={20} color="#9ca3af" />
-                <Input placeholder="Ask a question or search for papers..." />
+            <InputWrapper onClick={() => inputRef.current?.focus()}>
+                {isSearching ? (
+                    <SpinnerIcon />
+                ) : (
+                    <FiSearch size={20} color="#9ca3af" />
+                )}
+                
+                <Input 
+                    ref={inputRef}
+                    placeholder="Ask a question or search for papers..." 
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={isSearching}
+                />
+                
+                <KbdShortcut>⌘ K</KbdShortcut>
             </InputWrapper>
         </Container>
     );
 }
 
+// --- STYLES ---
+
 const Container = styled.div`
     position: fixed;
     bottom: 2rem;
-    /* These offsets ensure it centers visually between the sidebars */
     left: 260px; 
     right: 340px; 
     display: flex;
     justify-content: center;
     z-index: 50;
-    pointer-events: none; /* Allows clicks to pass through around the bar */
+    pointer-events: none; 
 `;
 
 const InputWrapper = styled.div`
     pointer-events: auto;
     width: 100%;
     max-width: 640px;
-    background-color: #1f2937; /* Dark */
+    background-color: #1f2937; 
     color: white;
     border-radius: 1rem;
     padding: 1rem 1.5rem;
@@ -40,11 +106,12 @@ const InputWrapper = styled.div`
     gap: 1rem;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     border: 1px solid #374151;
-    transition: transform 0.2s;
+    transition: transform 0.2s, border-color 0.2s;
+    cursor: text;
 
     &:focus-within {
         transform: translateY(-4px);
-        border-color: #6366f1; /* Indigo glow */
+        border-color: #6366f1; 
     }
 `;
 
@@ -75,4 +142,16 @@ const KbdShortcut = styled.kbd`
     min-width: 2.5rem;
     text-align: center;
     border-bottom: 2px solid #111827;
+    white-space: nowrap;
+`;
+
+const spin = keyframes`
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+`;
+
+const SpinnerIcon = styled(FiLoader)`
+    animation: ${spin} 1s linear infinite;
+    color: #6366f1;
+    font-size: 20px;
 `;

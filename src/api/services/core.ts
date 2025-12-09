@@ -28,3 +28,22 @@ apiClientV1.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
+apiClientV1.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        // Check if the error status is 401 (Unauthorized)
+        if (error.response?.status === 401) {
+        console.warn('Unauthorized - Token expired or invalid. Redirecting...');
+
+        if (typeof window !== 'undefined') {
+
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('userId');
+            
+            window.location.href = '/unauthorized';
+        }
+        }
+        return Promise.reject(error);
+    }
+);

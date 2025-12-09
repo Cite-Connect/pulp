@@ -31,7 +31,7 @@ export default function DashboardPage() {
         <DashboardContainer>
             <Header>
                 <h1>Citation Network</h1>
-                <p>Visualizing relationships for paper: Medical Imaging Transfer Learning</p>
+                <p>Visualizing relationships for you</p>
             </Header>
             
             {/* This renders the graph component we built */}

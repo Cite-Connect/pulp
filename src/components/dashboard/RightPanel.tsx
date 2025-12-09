@@ -1,255 +1,268 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { FiBookmark, FiThumbsUp, FiThumbsDown, FiCheck } from 'react-icons/fi';
-import { useSelectionStore } from '@/store/useSelectionStore';
-import { useLibraryStore } from '@/store/useLibraryStore'; 
-import { fetchPaperDetails } from '@/api/services/paper';
-import { PaperDetails } from '@/api/interface/types';
+import { FiList, FiStar, FiGitCommit } from 'react-icons/fi';
+import { graphApi } from '@/api/services/graph';
+import { paperApi } from '@/api/services/paper';
+import { RecommendedPaper, PaperDetails } from '@/api/interface/types';
+import { useDashboardStore } from '@/store/useDashboardStore';
+import { useFeedStore } from '@/store/useFeedStore';
 import Loader from '@/components/common/Loader';
+import PaperDetailView from './PaperDetailsView';
 
-// --- Component ---
 export default function RightPanel() {
-    const selectedNode = useSelectionStore((state) => state.selectedNode);
+    const {
+        setSelectedPaperId, 
+        setGraphData,
+        isLoading,
+        setIsLoading,
+    } = useDashboardStore();
     
-    // 1. Get the list of saved papers + toggle action
-    const { savedPapers, toggleSave } = useLibraryStore();
+    const { papers } = useFeedStore(); 
+    
+    const [inspectingPaper, setInspectingPaper] = useState<PaperDetails | null>(null);
 
-    const [details, setDetails] = useState<PaperDetails | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
-
-    // 2. Fetch Details when selection changes
-    useEffect(() => {
-        const loadDetails = async () => {
-        if (!selectedNode) return;
-        
-        setDetails(null); 
-        setFeedback(null);
-
+    const handleCardClick = async (paper: PaperDetails) => {
+        handleVisualizeGraph(paper);
+        setIsLoading(true);
         try {
-            setLoading(true);
-            // Ensure ID is passed as a string
-            const data = await fetchPaperDetails(String(selectedNode.id));
-            setDetails(data);
-        } catch (err) {
-            console.error("Failed to load details", err);
+            const data = await paperApi.fetchPaperDetails(paper.paper_id);
+            setInspectingPaper(data);
+        } catch (error) {
+            console.error("Failed to fetch details", error);
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
-        };
-
-        loadDetails();
-    }, [selectedNode]);
-
-    if (!selectedNode) {
-        return (
-        <PanelContainer>
-            <EmptyState>Select a paper to view details.</EmptyState>
-        </PanelContainer>
-        );
-    }
-
-    // 3. Loading State (Generic Loader)
-    if (loading) {
-        return (
-        <PanelContainer>
-            <Loader text="Fetching details..." size={40} />
-        </PanelContainer>
-        );
-    }
-
-    // 4. Smart Fallback Logic (Prevents flickering titles)
-    const fallbackData = selectedNode ? {
-        ...selectedNode,
-        title: selectedNode.label || "Untitled Paper", // Map label -> title
-        matching_aspects: [] as string[],
-        tldr: null,
-        quality_score: 0,
-        authors: selectedNode.authors || [], 
-        abstract: "",
-        year: selectedNode.year || new Date().getFullYear(),
-        citation_count: selectedNode.citation_count || 0,
-        domain: selectedNode.domain || 'Research'
-    } : null;
-
-    const display = details || (fallbackData as unknown as PaperDetails);
-
-    // 5. Individual Save Check
-    // Is *this specific paper* in the user's library?
-    const isPaperSaved = savedPapers.some((p) => p.id === display.id);
-
-    // Handlers
-    const handleFeedback = (type: 'like' | 'dislike') => {
-        setFeedback(prev => (prev === type ? null : type));
-        // TODO: Add API call here
     };
 
-    return (
-        <PanelContainer>
-        {/* Header Info */}
-        <div style={{ marginBottom: '1rem' }}>
-            <Badge>{display.domain}</Badge>
-            {display.quality_score && display.quality_score > 0 && (
-            <span style={{ fontSize: '0.75rem', color: '#666' }}>
-                Score: {Math.round(display.quality_score * 100)}%
-            </span>
+    const handleVisualizeGraph = async (paper: PaperDetails) => {
+        const currentPaperId = paper.paper_id;
+
+        setInspectingPaper(null); 
+        
+        setSelectedPaperId(currentPaperId);
+
+        try {
+            const result = await graphApi.fetchGraphData(currentPaperId);
+            setIsLoading(true)
+            setGraphData(result);
+        } catch (error) {
+            console.error("Failed to fetch graph", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleBackToList = () => {
+        setInspectingPaper(null);
+    };
+
+    if (isLoading) {
+        return (
+            <Panel>
+                <Loader text="Fetching Paper Details..." />
+            </Panel>
+        );
+    }
+
+    if (inspectingPaper) {
+        return (
+            <Panel>
+                <PaperDetailView 
+                    paper={inspectingPaper} 
+                    onBack={handleBackToList}
+                    // onVisualizeGraph={handleVisualizeGraph}
+                />
+            </Panel>
+        );
+    }
+
+    const isRecommendationResult = papers.length > 0 && 'relevance_score' in papers[0];
+
+    if (isRecommendationResult) {
+        return (
+        <Panel>
+            <PanelHeader>
+                <PanelTitle>Top Recommendations</PanelTitle>
+                <IconButton><FiList /></IconButton>
+            </PanelHeader>
+
+            <ListContainer>
+            {isLoading ? (
+                <LoadingState>Generating Knowledge Graph...</LoadingState>
+            ) : (
+                (papers as RecommendedPaper[]).map((paper, index) => (
+                    <RecCard key={paper.paper_id} onClick={() => handleCardClick(paper)}>
+                        <RecHeader>
+                            <RankBadge>#{index + 1}</RankBadge>
+                                {paper.relevance_score && (
+                            <ScoreBadge $score={paper.relevance_score}>
+                                <FiStar size={10} fill="currentColor" />
+                                {Math.round(paper.relevance_score * 100)}% Match
+                            </ScoreBadge>
+                            )}
+                        </RecHeader>
+                        <RecTitle>{paper.title}</RecTitle>
+                        {paper.relevance_explanation && (
+                            <RecExplanation>
+                                <FiGitCommit size={12} style={{flexShrink: 0, marginTop: 2}}/> 
+                                {paper.relevance_explanation}
+                            </RecExplanation>
+                        )}
+                        <RecMeta>{paper.venue || 'Journal'} • {paper.year}</RecMeta>
+                    </RecCard>
+                ))
             )}
-        </div>
+            </ListContainer>
+        </Panel>
+        );
+    }
 
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem', lineHeight: '1.3' }}>
-            {display.title}
-        </h2>
-
-        <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>
-            {display.year} • {display.citation_count} Citations
-        </p>
-
-        {/* --- ACTION BAR --- */}
-        <ActionRow>
-            <ActionButton 
-            onClick={() => toggleSave(display)} 
-            $active={isPaperSaved}
-            >
-            {isPaperSaved ? <FiCheck size={14} /> : <FiBookmark size={14} />}
-            {isPaperSaved ? 'Saved' : 'Save'}
-            </ActionButton>
-
-            <ActionButton onClick={() => handleFeedback('like')} $active={feedback === 'like'}>
-            <FiThumbsUp size={14} />
-            </ActionButton>
-
-            <ActionButton onClick={() => handleFeedback('dislike')} $active={feedback === 'dislike'}>
-            <FiThumbsDown size={14} />
-            </ActionButton>
-        </ActionRow>
-
-        {/* TLDR Section */}
-        {display.tldr && (
-            <TldrBox>
-            <strong>TL;DR:</strong> {display.tldr}
-            </TldrBox>
-        )}
-
-        {/* Matching Aspects */}
-        {display.matching_aspects && display.matching_aspects.length > 0 && (
-            <div style={{ marginBottom: '1rem' }}>
-            <h4 style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#888', marginBottom: '0.5rem' }}>
-                MATCHING TOPICS
-            </h4>
-            {display.matching_aspects.map((tag: string) => (
-                <AspectTag key={tag}>{tag}</AspectTag>
-            ))}
-            </div>
-        )}
-
-        <h4 style={{ fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>ABSTRACT</h4>
-        <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: '#444', marginBottom: '2rem' }}>
-            {display.abstract || "No abstract available."}
-        </p>
-
-        {/* Primary Action Button (Bottom) */}
-        <div style={{ marginTop: 'auto' }}>
-            <button 
-            onClick={() => toggleSave(display)}
-            style={{ 
-                width: '100%', 
-                padding: '12px', 
-                background: isPaperSaved ? '#e3f2fd' : '#1a1a1a', 
-                color: isPaperSaved ? '#1565c0' : 'white', 
-                border: isPaperSaved ? '1px solid #2196f3' : 'none',
-                borderRadius: '6px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-            }}
-            >
-                {isPaperSaved ? 'Remove from Library' : 'Add to Library'}
-            </button>
-        </div>
-
-        </PanelContainer>
+    return (
+        <Panel>
+            <EmptyStateContainer>
+                <EmptyDesc>
+                    Query and select any paper from your feed to visualize its citation network, 
+                    discover hidden connections, and find related research.
+                </EmptyDesc>
+            </EmptyStateContainer>
+        </Panel>
     );
 }
 
-const PanelContainer = styled.aside`
-    width: 350px;
-    background: #ffffff;
-    border-left: 1px solid #eaeaea;
+const Panel = styled.aside`
+    background-color: white;
+    border-left: 1px solid #e5e7eb;
     padding: 1.5rem;
-    height: 100%;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
+    gap: 1.5rem;
+    height: 100%;
+    overflow: hidden;
 `;
 
-const EmptyState = styled.div`
-    color: #888;
-    text-align: center;
-    margin-top: 50%;
-    font-size: 0.9rem;
+const PanelHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
 `;
 
-const Badge = styled.span`
-    background: #e3f2fd;
-    color: #1565c0;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-right: 0.5rem;
+const PanelTitle = styled.h3`
+    font-size: 1rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.02em;
 `;
 
-const AspectTag = styled.span`
-    background: #f3e5f5;
-    color: #7b1fa2;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    margin-right: 0.5rem;
+const IconButton = styled.button`
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover { color: #111827; }
+`;
+
+const ListContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 4px; }
+`;
+
+const RecCard = styled.div`
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    transition: transform 0.1s;
+    cursor: pointer;
+    
+    &:hover {
+        border-color: #cbd5e1;
+    }
+`;
+
+const RecHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 0.5rem;
-    display: inline-block;
 `;
 
-const TldrBox = styled.div`
-    background: #f9f9f9;
-    border-left: 3px solid #4caf50;
-    padding: 10px;
-    margin: 1rem 0;
-    font-size: 0.85rem;
-    color: #333;
-    font-style: italic;
+const RankBadge = styled.span`
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
+`;
+
+const ScoreBadge = styled.span<{ $score: number }>`
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: ${props => props.$score > 0.8 ? '#dcfce7' : '#fff7ed'};
+    color: ${props => props.$score > 0.8 ? '#15803d' : '#c2410c'};
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 9999px;
+`;
+
+const RecTitle = styled.h4`
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.5rem;
     line-height: 1.4;
 `;
 
-// --- Action Bar Styles ---
-const ActionRow = styled.div`
+const RecExplanation = styled.div`
     display: flex;
-    align-items: center;
     gap: 0.5rem;
-    margin: 1rem 0 1.5rem 0;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.75rem;
+    color: #64748b;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    border: 1px solid #f1f5f9;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
 `;
 
-const ActionButton = styled.button<{ $active?: boolean }>`
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: ${props => props.$active ? '#e3f2fd' : 'transparent'};
-    border: 1px solid ${props => props.$active ? '#2196f3' : '#eaeaea'};
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.8rem;
+const RecMeta = styled.div`
+    font-size: 0.7rem;
+    color: #94a3b8;
     font-weight: 500;
-    color: ${props => props.$active ? '#1565c0' : '#666'};
-    transition: all 0.2s ease;
+`;
 
-    &:hover {
-        background: #f5f5f5;
-        border-color: #d0d0d0;
-        color: #333;
-    }
+const EmptyStateContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 0 1rem;
+`;
+
+const EmptyDesc = styled.p`
+    color: #888;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    max-width: 320px;
+`;
+
+const LoadingState = styled.div`
+    text-align: center;
+    padding: 2rem;
+    color: #94a3b8;
+    font-size: 0.9rem;
 `;

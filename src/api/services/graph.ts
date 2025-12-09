@@ -18,7 +18,7 @@ export const graphApi = {
             ...params, // Override defaults if specific params are passed
         };
 
-        const response = await apiClientV1.get<GraphDataResponse>(
+        const response = await apiClientV1.post<GraphDataResponse>(
             `/graph/citation-network/${centralPaperId}`, 
             { params: defaultParams }
         );

@@ -67,7 +67,7 @@ export default function LoginPage() {
         resetStore();
 
         if (isRegistering) {
-            router.push('/onboarding/step-1');
+            router.push('/onboarding/step1');
         } else {
             router.push('/dashboard'); 
         }
@@ -195,25 +195,6 @@ const FormSection = styled.div`
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-`;
-
-const Divider = styled.div`
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-`;
-
-const Line = styled.div`
-    flex-grow: 1;
-    border-top: 1px solid #d1d5db;
-`;
-
-const DividerText = styled.span`
-    padding: 0 0.5rem;
-    background-color: white;
-    color: #6b7280;
-    font-size: 0.875rem;
 `;
 
 const Form = styled.form`

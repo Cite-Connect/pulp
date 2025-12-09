@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import styled from 'styled-components';
-import { graphApi } from '@/api/services/graph';
-import { GraphDataResponse } from '@/api/interface/types';
+import { FiGitCommit } from 'react-icons/fi';
 import { GraphNode } from '@/api/interface/types';
-import { fetchPaperDetails } from '@/api/services/paper';
+import { paperApi } from '@/api/services/paper';
 import { useSelectionStore } from '@/store/useSelectionStore';
+import { useDashboardStore } from '@/store/useDashboardStore'; // <--- Import Dashboard Store
 
+// Define the Node type extending GraphNode for simulation properties
 interface SimulationNode extends GraphNode {
     x?: number;
     y?: number;
@@ -19,138 +20,173 @@ interface SimulationNode extends GraphNode {
     index?: number;
 }
 
+// Dynamically import to avoid SSR issues
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
     ssr: false,
-    loading: () => <div className="p-4 text-center">Loading Graph Engine...</div>
+    loading: () => <LoadingState>Loading Graph Engine...</LoadingState>
 });
 
-
-const GraphWrapper = styled.div`
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    border: 1px solid #eaeaea;
-    overflow: hidden;
-    height: 600px; /* Fixed height for dashboard */
-    position: relative;
-    width: 100%;
-`;
-
-const GraphHeader = styled.div`
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    z-index: 10;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(0,0,0,0.1);
-
-    h3 { margin: 0; font-size: 0.9rem; font-weight: 600; }
-    span { font-size: 0.75rem; color: #666; }
-`;
-
 export default function CitationGraph() {
-    const [data, setData] = useState<GraphDataResponse | null>(null);
-    const [containerDimensions, setDimensions] = useState({ width: 800, height: 600 });
+    const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
     const containerRef = useRef<HTMLDivElement>(null);
-    const setSelectedNode = useSelectionStore((state) => state.setSelectedNode);
     
-    // Hardcoded ID for testing (The Medical Imaging paper from your logs)
-    const TEST_ID = '61827838932597591901992a4d3a86b71b42ac69';
+    const { graphData } = useDashboardStore(); 
+    const setSelectedNode = useSelectionStore((state) => state.setSelectedNode);
 
     useEffect(() => {
-        const updateDimensions = () => {
-        if (containerRef.current) {
-            setDimensions({
-            width: containerRef.current.clientWidth,
-            height: containerRef.current.clientHeight
-            });
-        }
-        };
+        if (!containerRef.current) return;
 
-        updateDimensions();
+        const resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                setDimensions({
+                    width: entry.contentRect.width,
+                    height: entry.contentRect.height
+                });
+            }
+        });
 
-        window.addEventListener('resize', updateDimensions);
-        return () => window.removeEventListener('resize', updateDimensions);
-    }, []);
-
-    useEffect(() => {
-        const loadGraph = async () => {
-        try {
-            const graphData = await graphApi.fetchGraphData(TEST_ID);
-            setData(graphData);
-        } catch (error) {
-            console.error("Graph load failed:", error);
-        }
-    };
-        loadGraph();
+        resizeObserver.observe(containerRef.current);
+        return () => resizeObserver.disconnect();
     }, []);
 
     const handleNodeClick = async (nodeId: string | number | undefined) => {
         try {
-            const paperDetails = await fetchPaperDetails(nodeId);
+            const paperDetails = await paperApi.fetchPaperDetails(String(nodeId));
             console.log("Paper Details:", paperDetails);
         } catch (error) {
             console.error("Failed to fetch paper details:", error);
         }
     };
 
-    const graphData = useMemo(() => {
-        if (!data) return { nodes: [], links: [] };
+    const nodesAndLinks = useMemo(() => {
+        if (!graphData) return { nodes: [], links: [] };
         
-        // We clone the data because D3 mutates objects (adds x, y, vx, vy)
         return {
-        nodes: data.nodes.map(node => ({ ...node })),
-        links: data.edges.map(link => ({ ...link }))
+            nodes: graphData.nodes.map(node => ({ ...node })),
+            links: graphData.edges.map(link => ({ ...link }))
         };
-    }, [data]);
+    }, [graphData]);
 
-    if (!data) {
+    if (!graphData) {
         return (
-        <GraphWrapper ref={containerRef} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p style={{ color: '#888' }}>Initializing Citation Network...</p>
-        </GraphWrapper>
+            <GraphContainer ref={containerRef} style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <IconCircle>
+                    <FiGitCommit />
+                </IconCircle>
+                <EmptyTitle>Explore the Knowledge Graph</EmptyTitle>
+            </GraphContainer>
         );
     }
 
     return (
-        <GraphWrapper ref={containerRef}>
-        <GraphHeader>
-            <h3>{data.nodes.find(n => n.type === 'central')?.label.slice(0, 40)}...</h3>
-            <span>{data.stats.total_nodes} Papers · {data.stats.total_edges} Citations</span>
-        </GraphHeader>
-
-        <ForceGraph2D
-            width={containerDimensions.width}
-            height={containerDimensions.height}
-            graphData={graphData}
+        <GraphContainer ref={containerRef}>
+            <ForceGraph2D
+                width={dimensions.width}
+                height={dimensions.height}
+                graphData={nodesAndLinks}
+                
+                backgroundColor="#f8fafc"
+                nodeLabel="label"
+                nodeRelSize={6}
+                
+                nodeColor={(node: unknown) => {
+                    const n = node as SimulationNode;
+                    return n.type === 'central' ? '#ef4444' : (n.color || '#4f46e5');
+                }}
+                
+                linkColor={() => '#cbd5e1'}
+                linkWidth={1.5}
+                linkDirectionalArrowLength={3.5}
+                linkDirectionalArrowRelPos={1}
+                
+                d3VelocityDecay={0.3}
+                cooldownTicks={100}
+                
+                onNodeClick={(node: unknown) => {
+                    const typedNode = node as GraphNode;
+                    handleNodeClick(typedNode.id);
+                    setSelectedNode(typedNode);
+                }}
+            />
             
-            // Appearance
-            backgroundColor="#ffffff"
-            nodeLabel="label" // Tooltip on hover
-            nodeColor={(node) => (node as SimulationNode).type === 'central' ? '#ff5252' : ((node as SimulationNode).color || '#4285F4')}
-            nodeRelSize={6} // Node size multiplier
-            
-            // Links
-            linkColor={() => '#e0e0e0'}
-            linkWidth={1.5}
-            linkDirectionalArrowLength={3.5}
-            linkDirectionalArrowRelPos={1}
-            
-            // Physics (Optional tuning)
-            d3VelocityDecay={0.1} // Lower = more "floaty"
-            cooldownTicks={100}   // Stop simulation after 100 frames to save battery
-            
-            // Interaction
-            onNodeClick={node => {
-                console.log("Clicked node:", node);
-                handleNodeClick(node.id);
-                setSelectedNode(node as GraphNode);
-            }}
-
-        />
-        </GraphWrapper>
+            <Legend>
+                <LegendItem>
+                    <Dot $color="#ef4444" /> Central
+                </LegendItem>
+                <LegendItem>
+                    <Dot $color="#4f46e5" /> Citation
+                </LegendItem>
+                <LegendItem>
+                    <Dot $color="#4ECDC4" /> Reference
+                </LegendItem>
+            </Legend>
+        </GraphContainer>
     );
 }
+
+const GraphContainer = styled.div`
+    width: 100%;
+    height: 100%; 
+    min-height: 400px;
+    background-color: #f8fafc;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+`;
+
+const LoadingState = styled.div`
+    padding: 2rem;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.875rem;
+`;
+
+const EmptyTitle = styled.h4`
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.75rem;
+`;
+
+const IconCircle = styled.div`
+    width: 3.5rem;
+    height: 3.5rem;
+    background-color: #f3f4f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+`;
+
+const Legend = styled.div`
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    gap: 1rem;
+    z-index: 5;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+`;
+
+const LegendItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    color: #475569;
+    font-weight: 600;
+`;
+
+const Dot = styled.div<{ $color: string }>`
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: ${props => props.$color};
+`;
