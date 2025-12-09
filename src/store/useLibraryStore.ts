@@ -23,5 +23,5 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     },
 
     // Helper to check status
-    isSaved: (paperId) => get().savedPapers.some((p) => p.id === paperId),
+    isSaved: (paperId) => get().savedPapers.some((p) => p.paper_id === paperId),
 }));
