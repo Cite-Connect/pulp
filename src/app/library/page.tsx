@@ -54,7 +54,7 @@ export default function LibraryPage() {
             ) : (
                 <PaperGrid>
                 {savedPapers.map((paper) => (
-                    <PaperCard key={paper.id}>
+                    <PaperCard key={paper.paper_id}>
                     <DomainBadge>{paper.domain}</DomainBadge>
                     
                     <PaperTitle>
@@ -67,7 +67,7 @@ export default function LibraryPage() {
 
                     <CardActions>
                         {/* Link to view on graph (Optional - sends you back to dashboard with ID) */}
-                        <Link href={`/dashboard?paperId=${paper.id}`} style={{ 
+                        <Link href={`/dashboard?paperId=${paper.paper_id}`} style={{ 
                             display: 'flex', alignItems: 'center', gap: '5px', 
                             fontSize: '0.8rem', color: '#2196f3', textDecoration: 'none', fontWeight: 600 
                         }}>

@@ -13,10 +13,10 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   // Toggle logic: Add if missing, Remove if present
     toggleSave: (paper) => {
         const { savedPapers } = get();
-        const exists = savedPapers.some((p) => p.id === paper.id);
+        const exists = savedPapers.some((p) => p.paper_id === paper.paper_id);
 
         if (exists) {
-        set({ savedPapers: savedPapers.filter((p) => p.id !== paper.id) });
+        set({ savedPapers: savedPapers.filter((p) => p.paper_id !== paper.paper_id) });
         } else {
         set({ savedPapers: [...savedPapers, paper] });
         }

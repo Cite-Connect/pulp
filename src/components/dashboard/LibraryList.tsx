@@ -19,7 +19,7 @@ export default function LibraryList() {
         
         {savedPapers.map((paper) => (
         <SavedItem 
-            key={paper.id}
+            key={paper.paper_id}
             onClick={() => {
                 // Click to view details
                 setSelectedNode({
