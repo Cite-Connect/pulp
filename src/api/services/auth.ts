@@ -40,6 +40,5 @@ export const getAccessToken = (): string | null => {
 
 export const getAuthHeaders = (): { Authorization?: string } => {
   const token = getAccessToken();
-  console.log("Auth Token:", token);
   return token ? { Authorization: `Bearer ${token}` } : {};
 };

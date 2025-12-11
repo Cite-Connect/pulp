@@ -18,5 +18,15 @@ export const paperApi = {
             }
         );
         return response.data;
+    },
+
+    getSavedPapers: async (user_id: string | null): Promise<PaperDetails[]> => {
+        const response = await apiClientV1.get<PaperDetails[]>(
+            `/${user_id}/saved`,
+            {
+                headers: getAuthHeaders(),
+            }
+        );
+        return response.data;
     }
 };

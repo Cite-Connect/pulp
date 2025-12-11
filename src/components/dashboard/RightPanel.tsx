@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { FiList, FiStar, FiGitCommit } from 'react-icons/fi';
+import { FiStar, FiGitCommit } from 'react-icons/fi';
 import { graphApi } from '@/api/services/graph';
 import { paperApi } from '@/api/services/paper';
 import { RecommendedPaper, PaperDetails } from '@/api/interface/types';
@@ -85,7 +85,6 @@ export default function RightPanel() {
         <Panel>
             <PanelHeader>
                 <PanelTitle>Top Recommendations</PanelTitle>
-                <IconButton><FiList /></IconButton>
             </PanelHeader>
 
             <ListContainer>
@@ -108,7 +107,7 @@ export default function RightPanel() {
                                 {paper.relevance_explanation}
                             </RecExplanation>
                         )}
-                        <RecMeta>{paper.venue || 'Journal'} • {paper.year}</RecMeta>
+                        <RecMeta>{paper.venue ? '${paper.venue} •' : ''} {paper.year}</RecMeta>
                     </RecCard>
                 ))}
             </ListContainer>

@@ -136,7 +136,7 @@ export interface PaperDetails {
 export interface RecommendationPayload {
     user_id: number | string; // Optional if backend infers from token
     count: number;            // Default 10
-    model_preference?: 'minilm' | 'specter' | 'scibert';
+    model_preference?: 'minilm' | 'specter';
     search_query: string;
     session_id: string;
 }

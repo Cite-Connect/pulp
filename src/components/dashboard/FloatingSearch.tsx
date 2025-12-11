@@ -2,20 +2,24 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FiSearch, FiLoader } from 'react-icons/fi';
+import { FiSearch, FiLoader, FiChevronDown } from 'react-icons/fi';
 import { paperApi } from '@/api/services/paper';
+import { authApi } from '@/api/services/auth';
 import { generateSessionId } from '@/utils/session';
 import { useFeedStore } from '@/store/useFeedStore';
 import { useRecommendationStore } from '@/store/useRecommendationStore';
+import { useDashboardStore } from '@/store/useDashboardStore'; // <--- 1. Import Dashboard Store
 
 export default function FloatingSearch() {
     const [query, setQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
+    const [selectedModel, setSelectedModel] = useState<'specter' | 'llama'>('specter');
     const inputRef = useRef<HTMLInputElement>(null);
     
     const { setPapers, setLoading } = useFeedStore();
-    
     const { setRecommendations } = useRecommendationStore();
+
+    const { setInspectingPaper, setSelectedPaperId, setGraphData } = useDashboardStore();
 
     useEffect(() => {
         const handleShortcut = (e: KeyboardEvent) => {
@@ -35,6 +39,10 @@ export default function FloatingSearch() {
             setIsSearching(true);
             setLoading(true);
 
+            setInspectingPaper(null);      
+            setSelectedPaperId(null);      
+            setGraphData(null);            
+
             try {
                 const rawId = localStorage.getItem('userId');
                 const userId = rawId ? Number(rawId) : 0;
@@ -43,7 +51,7 @@ export default function FloatingSearch() {
                     search_query: query,
                     user_id: userId,
                     count: 10,
-                    model_preference: 'minilm',
+                    model_preference: selectedModel === 'specter' ? 'specter' : 'minilm',
                     session_id: generateSessionId(userId),
                 });
 
@@ -52,7 +60,6 @@ export default function FloatingSearch() {
                 
             } catch (err) {
                 console.error("Search failed:", err);
-
             } finally {
                 setIsSearching(false);
                 setLoading(false);
@@ -77,14 +84,25 @@ export default function FloatingSearch() {
                     onKeyDown={handleKeyDown}
                     disabled={isSearching}
                 />
+
+                {/* Model Selector */}
+                <SelectWrapper onClick={(e) => e.stopPropagation()}>
+                    <ModelSelect 
+                        value={selectedModel} 
+                        onChange={(e) => setSelectedModel(e.target.value as 'specter' | 'llama')}
+                        disabled={isSearching}
+                    >
+                        <option value="specter">Specter (Recommended)</option>
+                        <option value="llama">Llama Model</option>
+                    </ModelSelect>
+                    <FiChevronDown size={14} className="chevron" />
+                </SelectWrapper>
                 
                 <KbdShortcut>⌘ K</KbdShortcut>
             </InputWrapper>
         </Container>
     );
 }
-
-// --- STYLES ---
 
 const Container = styled.div`
     position: fixed;
@@ -100,14 +118,14 @@ const Container = styled.div`
 const InputWrapper = styled.div`
     pointer-events: auto;
     width: 100%;
-    max-width: 640px;
+    max-width: 700px;
     background-color: #1f2937; 
     color: white;
     border-radius: 1rem;
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1.25rem;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     border: 1px solid #374151;
     transition: transform 0.2s, border-color 0.2s;
@@ -126,6 +144,7 @@ const Input = styled.input`
     color: white;
     font-size: 1rem;
     font-weight: 500;
+    min-width: 0;
 
     &:focus {
         outline: none;
@@ -133,6 +152,45 @@ const Input = styled.input`
     
     &::placeholder {
         color: #9ca3af;
+    }
+`;
+
+const SelectWrapper = styled.div`
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: #374151;
+    border-radius: 0.5rem;
+    padding: 0 0.5rem;
+    height: 2rem;
+
+    .chevron {
+        color: #9ca3af;
+        pointer-events: none;
+        position: absolute;
+        right: 0.5rem;
+    }
+`;
+
+const ModelSelect = styled.select`
+    appearance: none;
+    background: transparent;
+    border: none;
+    color: #e5e7eb;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding-right: 1.5rem;
+    padding-left: 0.25rem;
+    cursor: pointer;
+    outline: none;
+
+    option {
+        background-color: #1f2937;
+        color: white;
+    }
+
+    &:focus {
+        color: white;
     }
 `;
 

@@ -113,11 +113,6 @@ export default function PaperDetailView({ paper, onBack }: PaperDetailViewProps)
             <ScrollableContent>
                 <div style={{ marginBottom: '1rem' }}>
                 <Badge>{paper.domain}</Badge>
-                {paper.quality_score && paper.quality_score > 0 && (
-                    <span style={{ fontSize: '0.75rem', color: '#666' }}>
-                    Score: {Math.round(paper.quality_score * 100)}%
-                    </span>
-                )}
                 </div>
 
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem', lineHeight: '1.3' }}>

@@ -4,27 +4,22 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
 import { FiTrash2, FiBookOpen } from 'react-icons/fi';
-
-// 1. Re-use your existing components to keep the UI consistent
 import LeftSidebar from '@/components/dashboard/LeftSidebar'; 
 import AuthGuard from '@/components/auth/AuthGuard'; 
 import { useLibraryStore } from '@/store/useLibraryStore';
+import { paperApi } from '@/api/services/paper';
 
 
 export default function LibraryPage() {
-    // Use 'true' to ensure we only render after hydration (fixes hydration mismatch errors)
-    const [mounted, setMounted] = useState(false);
     const { savedPapers, toggleSave } = useLibraryStore();
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setMounted(true);
-        }, 0);
-
-        return () => clearTimeout(timer);
+        const user_id = localStorage.getItem('userId');
+        const fetchSavedPapers = async () => {
+            await paperApi.getSavedPapers(user_id);
+        };
+        fetchSavedPapers();
     }, []);
-
-    if (!mounted) return null;
 
     return (
         <AuthGuard>

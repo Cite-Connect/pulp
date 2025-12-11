@@ -1,20 +1,34 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FiArrowLeft, FiUser, FiGlobe, FiLogOut, FiBriefcase } from 'react-icons/fi';
 import AuthGuard from '@/components/auth/AuthGuard';
-import { CreateProfileResponse } from '@/api/interface/types';
+import { GetProfileResponse, UserProfile } from '@/api/interface/types'; // Updated import
 import { userApi } from '@/api/services/user';
 
 export default function SettingsPage() {
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
         const fetchProfile = async () => {
-            const userId = localStorage.getItem('userId') || '';
-            const result: CreateProfileResponse = await userApi.getProfile(userId);
-            console.log('Fetched profile:', result);
+            const userId = localStorage.getItem('userId');
+            if (!userId) return;
+
+            try {
+                const result = await userApi.getProfile(userId) as unknown as GetProfileResponse;
+                
+                if (result && result.profile) {
+                    setProfile(result.profile);
+                }
+            } catch (error) {
+                console.error("Failed to fetch profile:", error);
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchProfile();
@@ -22,11 +36,16 @@ export default function SettingsPage() {
 
     const router = useRouter();
     const handleLogout = () => {
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('accessToken');
         localStorage.removeItem('userId');
-        localStorage.removeItem('sessionId');
         router.push('/login');
     }
+
+    const formatValue = (val?: string) => {
+        if (!val) return 'Not set';
+        return val.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    };
+
     return (
         <AuthGuard>
         <Container>
@@ -46,26 +65,25 @@ export default function SettingsPage() {
             <Row>
                 <RowContent>
                 <Label><FiUser /> Role</Label>
-                <Value>Not set</Value>
+                <Value>{loading ? 'Loading...' : formatValue(profile?.research_stage)}</Value>
                 </RowContent>
             </Row>
 
             <Row>
                 <RowContent>
                 <Label><FiBriefcase /> Institution</Label>
-                <Value>Not set</Value>
+                <Value>{loading ? 'Loading...' : (profile?.institution || 'Not set')}</Value>
                 </RowContent>
             </Row>
 
             <Row>
                 <RowContent>
                 <Label><FiGlobe /> Research Domain</Label>
-                <Value>Not set</Value>
+                <Value>{loading ? 'Loading...' : formatValue(profile?.primary_domain)}</Value>
                 </RowContent>
             </Row>
             </Section>
 
-            {/* Danger Zone */}
             <Section style={{ borderColor: '#ffcdd2' }}>
             <LogoutButton onClick={() => handleLogout()}>
                 <FiLogOut /> Log Out
@@ -127,7 +145,7 @@ const SectionHeader = styled.div`
 const Row = styled.div`
     display: flex;
     align-items: center;
-    justify-content: space-between; /* Pushes Edit button to far right */
+    justify-content: space-between;
     padding: 1.5rem;
     border-bottom: 1px solid #f9f9f9;
 
@@ -157,7 +175,8 @@ const Value = styled.div`
     color: #1a1a1a;
     font-weight: 600;
     font-size: 1rem;
-    padding-left: 24px; /* Align with text, skipping the icon space */
+    padding-left: 24px;
+    text-transform: capitalize;
 `;
 
 const EditButton = styled.button`

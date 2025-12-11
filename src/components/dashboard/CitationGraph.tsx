@@ -7,9 +7,7 @@ import { FiGitCommit } from 'react-icons/fi';
 import { GraphNode } from '@/api/interface/types';
 import { paperApi } from '@/api/services/paper';
 import { useSelectionStore } from '@/store/useSelectionStore';
-import { useDashboardStore } from '@/store/useDashboardStore'; // <--- Import Dashboard Store
-
-// Define the Node type extending GraphNode for simulation properties
+import { useDashboardStore } from '@/store/useDashboardStore';
 interface SimulationNode extends GraphNode {
     x?: number;
     y?: number;
@@ -20,7 +18,6 @@ interface SimulationNode extends GraphNode {
     index?: number;
 }
 
-// Dynamically import to avoid SSR issues
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
     ssr: false,
     loading: () => <LoadingState>Loading Graph Engine...</LoadingState>
@@ -30,14 +27,11 @@ export default function CitationGraph() {
     const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
     const containerRef = useRef<HTMLDivElement>(null);
     
-    // 1. Consume Data from Store instead of Props or Local State
     const { graphData } = useDashboardStore(); 
     
-    // 2. We still use Selection Store to handle clicks on nodes
     const setSelectedNode = useSelectionStore((state) => state.setSelectedNode);
-    const { setInspectingPaper } = useDashboardStore(); // To trigger details view on click
+    const { setInspectingPaper } = useDashboardStore();
 
-    // Resize Observer to handle layout changes
     useEffect(() => {
         if (!containerRef.current) return;
 
@@ -52,11 +46,10 @@ export default function CitationGraph() {
 
         resizeObserver.observe(containerRef.current);
         return () => resizeObserver.disconnect();
-    }, [graphData]); // Re-measure if data changes
+    }, [graphData]);
 
     const handleNodeClick = async (nodeId: string) => {
         try {
-            // Fetch details and open the "Paper Details" view in Right Panel
             const paperDetails = await paperApi.fetchPaperDetails(nodeId);
             setInspectingPaper(paperDetails); 
         } catch (error) {
@@ -64,7 +57,6 @@ export default function CitationGraph() {
         }
     };
 
-    // Memoize nodes/links to prevent re-simulation on every render
     const nodesAndLinks = useMemo(() => {
         if (!graphData) return { nodes: [], links: [] };
         
@@ -96,7 +88,6 @@ export default function CitationGraph() {
                 nodeLabel="label"
                 nodeRelSize={6}
                 
-                // Fix types for nodeColor
                 nodeColor={(node: unknown) => {
                     const n = node as SimulationNode;
                     return n.type === 'central' ? '#ef4444' : (n.color || '#4f46e5');
@@ -110,12 +101,9 @@ export default function CitationGraph() {
                 d3VelocityDecay={0.3}
                 cooldownTicks={100}
                 
-                // Interactions
                 onNodeClick={(node: unknown) => {
                     const typedNode = node as GraphNode;
-                    // 1. Update selection highlight
                     setSelectedNode(typedNode);
-                    // 2. Trigger the details panel
                     handleNodeClick(typedNode.id);
                 }}
             />
@@ -134,8 +122,6 @@ export default function CitationGraph() {
         </GraphContainer>
     );
 }
-
-// --- STYLES ---
 
 const GraphContainer = styled.div`
     width: 100%;
