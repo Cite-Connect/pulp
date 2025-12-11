@@ -19,10 +19,10 @@ const READING_MAPPING: Record<string, string> = {
 const RESEARCH_STAGE: Record<string, string> = {
     "Bachelor's Student": 'undergraduate',
     "Master's Student": 'masters',
-    'PhD Candiate': 'postdoc',
+    'PhD Candidate': 'postdoc',
     'Professor': 'professor',
     'Industry Researcher': 'industry',
-    'Researcher': 'independent_researcher',
+    'Researcher': 'independent',
 };
 
 export const userApi = {
@@ -49,10 +49,9 @@ export const userApi = {
         return response.data;
     },
 
-    // Helper: In case you need to fetch the profile later
     getProfile: async (userId: string) => {
-        const response = await apiClientV1.get<unknown>(
-            `/${userId}/profile`,
+        const response = await apiClientV1.get<CreateProfileResponse>(
+            `users/${userId}/profile`,
             {
                 headers: getAuthHeaders(),
             }

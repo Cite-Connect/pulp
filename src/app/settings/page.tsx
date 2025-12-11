@@ -1,13 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FiArrowLeft, FiUser, FiGlobe, FiLogOut, FiBriefcase } from 'react-icons/fi';
 import AuthGuard from '@/components/auth/AuthGuard';
+import { CreateProfileResponse } from '@/api/interface/types';
+import { userApi } from '@/api/services/user';
 
 export default function SettingsPage() {
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const userId = localStorage.getItem('userId') || '';
+            const result: CreateProfileResponse = await userApi.getProfile(userId);
+            console.log('Fetched profile:', result);
+        };
+
+        fetchProfile();
+    }, []);
+
     const router = useRouter();
     const handleLogout = () => {
         localStorage.removeItem('authToken');
@@ -36,7 +48,6 @@ export default function SettingsPage() {
                 <Label><FiUser /> Role</Label>
                 <Value>Not set</Value>
                 </RowContent>
-                <EditButton onClick={() => alert('Edit Role')}>Edit</EditButton>
             </Row>
 
             <Row>
@@ -44,7 +55,6 @@ export default function SettingsPage() {
                 <Label><FiBriefcase /> Institution</Label>
                 <Value>Not set</Value>
                 </RowContent>
-                <EditButton onClick={() => alert('Edit Institution')}>Edit</EditButton>
             </Row>
 
             <Row>
@@ -52,7 +62,6 @@ export default function SettingsPage() {
                 <Label><FiGlobe /> Research Domain</Label>
                 <Value>Not set</Value>
                 </RowContent>
-                <EditButton onClick={() => alert('Edit Domain')}>Edit</EditButton>
             </Row>
             </Section>
 

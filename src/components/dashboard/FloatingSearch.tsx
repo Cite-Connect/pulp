@@ -6,6 +6,7 @@ import { FiSearch, FiLoader } from 'react-icons/fi';
 import { paperApi } from '@/api/services/paper';
 import { generateSessionId } from '@/utils/session';
 import { useFeedStore } from '@/store/useFeedStore';
+import { useRecommendationStore } from '@/store/useRecommendationStore';
 
 export default function FloatingSearch() {
     const [query, setQuery] = useState('');
@@ -13,6 +14,8 @@ export default function FloatingSearch() {
     const inputRef = useRef<HTMLInputElement>(null);
     
     const { setPapers, setLoading } = useFeedStore();
+    
+    const { setRecommendations } = useRecommendationStore();
 
     useEffect(() => {
         const handleShortcut = (e: KeyboardEvent) => {
@@ -30,25 +33,26 @@ export default function FloatingSearch() {
             e.preventDefault();
             
             setIsSearching(true);
-            setLoading(true); // Show skeletons in dashboard immediately
+            setLoading(true);
 
             try {
-                const userId = localStorage.getItem('userId') || Number(localStorage.getItem('userId'));
+                const rawId = localStorage.getItem('userId');
+                const userId = rawId ? Number(rawId) : 0;
                 
                 const response = await paperApi.getRecommendations({
                     search_query: query,
-                    user_id: Number(userId),
+                    user_id: userId,
                     count: 10,
                     model_preference: 'minilm',
                     session_id: generateSessionId(userId),
                 });
 
-                // Update the main feed with AI recommendations
+                setRecommendations(response.recommendations, response.metadata);
                 setPapers(response.recommendations);
                 
             } catch (err) {
                 console.error("Search failed:", err);
-                // Optional: Add toast error here
+
             } finally {
                 setIsSearching(false);
                 setLoading(false);

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react'; // <--- Added useEffect, useRef
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { FiShare2, FiArrowLeft, FiBookmark, FiCheck, FiThumbsUp, FiThumbsDown } from 'react-icons/fi';
+import { FiArrowLeft, FiBookmark, FiCheck, FiThumbsUp, FiThumbsDown } from 'react-icons/fi';
 import { PaperDetails } from '@/api/interface/types';
 import { useLibraryStore } from '@/store/useLibraryStore';
 import { interactionsApi } from '@/api/services/interactions';
@@ -16,6 +16,8 @@ interface PaperDetailViewProps {
 export default function PaperDetailView({ paper, onBack }: PaperDetailViewProps) {
     const { savedPapers, toggleSave } = useLibraryStore();
     const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
+    const { score_breakdown } = paper;
+    console.log('Score Breakdown:', paper);
     
     const hasLoggedView = useRef(false);
 
@@ -41,6 +43,7 @@ export default function PaperDetailView({ paper, onBack }: PaperDetailViewProps)
                     context: { 
                         source: 'search',
                         session_id: localStorage.getItem('sessionId') || undefined,
+                        score_breakdown: score_breakdown,
                     }
                 }
                 
@@ -64,7 +67,8 @@ export default function PaperDetailView({ paper, onBack }: PaperDetailViewProps)
                     interaction_type: 'save',
                     context: {
                         source: 'search',
-                        session_id: localStorage.getItem('sessionId') || undefined
+                        session_id: localStorage.getItem('sessionId') || undefined,
+                        score_breakdown: score_breakdown,
                     }
                 }, user_id);
             } catch (err) {
@@ -85,7 +89,8 @@ export default function PaperDetailView({ paper, onBack }: PaperDetailViewProps)
                     interaction_type: interactionType,
                     context: {
                         source: 'search',
-                        session_id: localStorage.getItem('sessionId') || undefined
+                        session_id: localStorage.getItem('sessionId') || undefined,
+                        score_breakdown: score_breakdown,
                     }
                 }, user_id);
             } catch (err) {
@@ -103,7 +108,6 @@ export default function PaperDetailView({ paper, onBack }: PaperDetailViewProps)
                 </IconButton>
                 <PanelTitle>Paper Details</PanelTitle>
                 </div>
-                <IconButton><FiShare2 /></IconButton>
             </PanelHeader>
 
             <ScrollableContent>

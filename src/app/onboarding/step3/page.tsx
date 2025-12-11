@@ -40,19 +40,6 @@ export default function Step3Page() {
             </CardRow>
 
             <Divider />
-
-            <CardRow>
-            <RowLabel>Linked Account</RowLabel>
-            <StatusBadge $active={scholarLinked}>
-                {scholarLinked ? (
-                <>
-                    <StatusDot /> Google Scholar Connected
-                </>
-                ) : (
-                'Not Connected'
-                )}
-            </StatusBadge>
-            </CardRow>
         </SummaryCard>
 
         <InfoBox>

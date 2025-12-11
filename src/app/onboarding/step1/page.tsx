@@ -1,14 +1,42 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { userApi } from '@/api/services/user';
 import { CreateProfilePayload, CreateProfileResponse } from '@/api/interface/types';
 import { getApiErrorMessage } from '@/utils/errorHandler';
+import { FiPlus, FiCheck } from 'react-icons/fi';
 
 const DOMAIN_OPTIONS = ['Finance', 'Healthcare', 'Quantum Computing'];
+
+const SUB_DOMAINS_DATA = [
+  {
+    primary_domain: "fintech",
+    unique_sub_domains: [
+      "algorithmic_trading", "asset_pricing", "credit_risk", "derivatives",
+      "financial_forecasting", "fraud_detection", "high frequency trading",
+      "market_microstructure", "payments", "portfolio_optimization", "risk_modeling"
+    ]
+  },
+  {
+    primary_domain: "healthcare",
+    unique_sub_domains: [
+      "causal_inference", "clinical_trials", "diagnostics", "ehr_analytics",
+      "healthcare_operations", "medical_imaging", "outcomes_research",
+      "pathology", "public_health", "radiology"
+    ]
+  },
+  {
+    primary_domain: "quantum_computing",
+    unique_sub_domains: [
+      "quantum_circuits", "quantum_cryptography", "quantum_algorithms",
+      "quantum_error_correction", "quantum_hardware", "quantum_machine_learning",
+      "quantum_simulation", "variational_circuits"
+    ]
+  }
+];
 
 export default function Step1Page() {
   const router = useRouter();
@@ -21,23 +49,28 @@ export default function Step1Page() {
   } = useOnboardingStore();
 
   const [errors, setErrors] = useState<{ role?: string; domain?: string; interests?: string; api?: string }>({});
-  const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const newTag = tagInput.trim();
-      
-      if (newTag && !interests.includes(newTag)) {
-        if (interests.length >= 10) {
-          setErrors(prev => ({ ...prev, interests: 'Maximum 10 interests allowed.' }));
-          return;
-        }
-        setInterests([...interests, newTag]);
-        setTagInput('');
-        setErrors(prev => ({ ...prev, interests: undefined })); // Clear error
+  const suggestedInterests = useMemo(() => {
+    if (!domain) return [];
+    
+    const lookupKey = domain.toLowerCase().replace(' ', '_');
+    
+    let targetKey = lookupKey;
+    if (lookupKey === 'finance') targetKey = 'fintech';
+
+    const found = SUB_DOMAINS_DATA.find(d => d.primary_domain === targetKey);
+    return found ? found.unique_sub_domains : [];
+  }, [domain]);
+
+  const addTag = (newTag: string) => {
+    if (newTag && !interests.includes(newTag)) {
+      if (interests.length >= 10) {
+        setErrors(prev => ({ ...prev, interests: 'Maximum 10 interests allowed.' }));
+        return;
       }
+      setInterests([...interests, newTag]);
+      setErrors(prev => ({ ...prev, interests: undefined }));
     }
   };
 
@@ -90,7 +123,7 @@ export default function Step1Page() {
       
       console.log('Profile Created:', result);
       
-      router.push('/onboarding/step2');
+      router.push('/onboarding/step3');
 
     } catch (err: unknown) {
       setErrors({ api: getApiErrorMessage(err) });
@@ -106,7 +139,6 @@ export default function Step1Page() {
 
   const handleDomainSelect = (option: string) => {
     setDomain(option);
-    if (interests.length === 0) setInterests([option]); 
     if (errors.domain) setErrors({ ...errors, domain: undefined });
   };
 
@@ -166,25 +198,30 @@ export default function Step1Page() {
           {errors.domain && <ErrorText>{errors.domain}</ErrorText>}
         </FormGroup>
 
-        {/* --- NEW: INTERESTS TAG INPUT --- */}
         <FormGroup>
           <Label $required>Specific Interests (Min 3)</Label>
-          <TagsContainer $hasError={!!errors.interests}>
-            {interests.map(tag => (
-              <Tag key={tag}>
-                {tag}
-                <RemoveBtn onClick={() => removeTag(tag)}>×</RemoveBtn>
-              </Tag>
-            ))}
-            <TagInput 
-              type="text"
-              placeholder={interests.length === 0 ? "Type e.g. 'NLP' and press Enter..." : "Add another..."}
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagKeyDown}
-            />
-          </TagsContainer>
-          <Hint>Press <b>Enter</b> to add a tag.</Hint>
+          {suggestedInterests.length > 0 && (
+            <SuggestionsWrapper>
+              <SuggestionLabel>Suggested for {domain}:</SuggestionLabel>
+              <SuggestionGrid>
+                {suggestedInterests.map(suggestion => {
+                  const isSelected = interests.includes(suggestion);
+                  return (
+                    <SuggestionChip 
+                      key={suggestion} 
+                      onClick={() => isSelected ? removeTag(suggestion) : addTag(suggestion)}
+                      type="button"
+                      $active={isSelected}
+                    >
+                      {isSelected ? <FiCheck size={12} /> : <FiPlus size={12} />} 
+                      {suggestion.replace(/_/g, ' ')}
+                    </SuggestionChip>
+                  );
+                })}
+              </SuggestionGrid>
+            </SuggestionsWrapper>
+          )}
+
           {errors.interests && <ErrorText>{errors.interests}</ErrorText>}
         </FormGroup>
 
@@ -198,8 +235,6 @@ export default function Step1Page() {
     </Wrapper>
   );
 }
-
-// --- STYLES ---
 
 const Wrapper = styled.div`
   display: flex;
@@ -354,63 +389,48 @@ const DomainText = styled.span`
   font-size: 0.95rem;
 `;
 
-// --- Tag Styles ---
-const TagsContainer = styled.div<{ $hasError?: boolean }>`
+const SuggestionsWrapper = styled.div`
+  margin-top: 0.75rem;
+  background-color: #f9fafb;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px dashed #d1d5db;
+`;
+
+const SuggestionLabel = styled.p`
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+`;
+
+const SuggestionGrid = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.5rem;
-  border: 1px solid ${props => props.$hasError ? '#ef4444' : '#d1d5db'};
-  border-radius: 0.5rem;
-  background-color: white;
-  min-height: 3rem;
-  animation: ${props => props.$hasError ? shake : 'none'} 0.3s ease-in-out;
-
-  &:focus-within {
-    border-color: ${props => props.$hasError ? '#ef4444' : '#6366f1'};
-    box-shadow: 0 0 0 1px ${props => props.$hasError ? '#ef4444' : '#6366f1'};
-  }
 `;
 
-const Tag = styled.span`
+const SuggestionChip = styled.button<{ $active?: boolean }>`
   display: inline-flex;
   align-items: center;
-  background-color: #e0e7ff; /* indigo-100 */
-  color: #3730a3; /* indigo-800 */
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 0.25rem 0.6rem;
+  gap: 0.25rem;
+  background-color: ${props => props.$active ? '#e0e7ff' : 'white'};
+  border: 1px solid ${props => props.$active ? '#6366f1' : '#e5e7eb'};
+  padding: 0.35rem 0.75rem;
   border-radius: 9999px;
-`;
-
-const RemoveBtn = styled.button`
-  background: none;
-  border: none;
-  color: #6366f1;
-  margin-left: 0.25rem;
+  font-size: 0.8rem;
+  color: ${props => props.$active ? '#3730a3' : '#374151'};
   cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  
-  &:hover { color: #3730a3; }
-`;
+  transition: all 0.2s;
+  text-transform: capitalize;
 
-const TagInput = styled.input`
-  flex: 1;
-  border: none;
-  min-width: 120px;
-  font-size: 0.95rem;
-  padding: 0.25rem;
-  &:focus { outline: none; }
-  &::placeholder { color: #9ca3af; }
-`;
-
-const Hint = styled.p`
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: 0.25rem;
+  &:hover {
+    border-color: #6366f1;
+    color: ${props => props.$active ? '#3730a3' : '#4f46e5'};
+    background-color: ${props => props.$active ? '#c7d2fe' : '#eef2ff'};
+  }
 `;
 
 const ErrorText = styled.span`

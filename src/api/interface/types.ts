@@ -130,6 +130,7 @@ export interface PaperDetails {
     tldr?: string;
     relevance_score?: number;
     matching_aspects: string[];
+    score_breakdown?: ScoreBreakdown;
 }
 
 export interface RecommendationPayload {
@@ -144,13 +145,13 @@ export interface ScoreBreakdown {
     keyword: number;
     semantic: number;
     profile: number;
+    multi_score_boost: number
 }
 
 export interface RecommendedPaper extends PaperDetails {
     relevance_score: number;       // 0.0 - 1.0
     relevance_explanation?: string; // "Why we showed this"
     match_source?: string;         // "keyword+semantic"
-    score_breakdown?: ScoreBreakdown;
 }
 
 export interface RecommendationMetadata {
@@ -180,6 +181,7 @@ export interface InteractionContext {
     source?: string; // e.g. "search_results", "recommendations", "citation_graph"
     position?: number;
     session_id?: string;
+    score_breakdown?: ScoreBreakdown;
 }
 
 export interface TrackInteractionPayload {

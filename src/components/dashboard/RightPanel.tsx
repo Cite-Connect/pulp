@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { FiList, FiStar, FiGitCommit, FiArrowLeft, FiShare2 } from 'react-icons/fi';
+import { FiList, FiStar, FiGitCommit } from 'react-icons/fi';
 import { graphApi } from '@/api/services/graph';
 import { paperApi } from '@/api/services/paper';
 import { RecommendedPaper, PaperDetails } from '@/api/interface/types';
 import { useDashboardStore } from '@/store/useDashboardStore';
-import { useFeedStore } from '@/store/useFeedStore';
+import { useRecommendationStore } from '@/store/useRecommendationStore';
 import Loader from '@/components/common/Loader';
 import PaperDetailView from './PaperDetailsView';
 
@@ -19,18 +19,18 @@ export default function RightPanel() {
         inspectingPaper, setInspectingPaper
     } = useDashboardStore();
     
-    const { papers } = useFeedStore(); 
+    const { results: recommendations } = useRecommendationStore(); 
     
     const [detailsLoading, setDetailsLoading] = useState(false);
 
     const handleCardClick = async (paper: PaperDetails) => {
-        handleVisualizeGraph(paper)
+        handleVisualizeGraph(paper);
         setInspectingPaper(paper); 
         setDetailsLoading(true);
         
         try {
             const data = await paperApi.fetchPaperDetails(paper.paper_id);
-            setInspectingPaper(data);
+            setInspectingPaper(paper);
         } catch (error) {
             console.error("Failed to fetch details", error);
         } finally {
@@ -80,9 +80,7 @@ export default function RightPanel() {
         );
     }
 
-    const isRecommendationResult = papers.length > 0 && 'relevance_score' in papers[0];
-
-    if (isRecommendationResult) {
+    if (recommendations.length > 0) {
         return (
         <Panel>
             <PanelHeader>
@@ -91,7 +89,8 @@ export default function RightPanel() {
             </PanelHeader>
 
             <ListContainer>
-                {(papers as RecommendedPaper[]).map((paper, index) => (
+                {/* 4. Map over recommendations from store */}
+                {(recommendations as RecommendedPaper[]).map((paper, index) => (
                     <RecCard key={paper.paper_id} onClick={() => handleCardClick(paper)}>
                         <RecHeader>
                             <RankBadge>#{index + 1}</RankBadge>
@@ -117,7 +116,6 @@ export default function RightPanel() {
         );
     }
 
-    // 4. ZERO STATE
     return (
         <Panel>
             <EmptyStateContainer>
@@ -130,7 +128,6 @@ export default function RightPanel() {
     );
 }
 
-// --- STYLES ---
 
 const Panel = styled.aside`
     background-color: white;

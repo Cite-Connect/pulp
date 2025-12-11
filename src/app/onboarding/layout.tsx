@@ -77,7 +77,7 @@ children,
 children: React.ReactNode;
 }) {
     const pathname = usePathname();
-    const currentStep = pathname.includes('step2') ? 2 : pathname.includes('step3') ? 3 : 1;
+    const currentStep = pathname.includes('step2') ? 2 : pathname.includes('step3') ? 2 : 1;
 
     return (
         <LayoutWrapper>
@@ -89,17 +89,17 @@ children: React.ReactNode;
                 <StepLabel>Profile</StepLabel>
             </Step>
             
-            <Line $active={currentStep >= 2} />
+            {/* <Line $active={currentStep >= 2} />
             
             <Step>
                 <Circle $active={currentStep >= 2}>2</Circle>
                 <StepLabel>Research</StepLabel>
-            </Step>
+            </Step> */}
             
-            <Line $active={currentStep > 2} />
+            <Line $active={currentStep == 2} />
             
             <Step>
-                <Circle $active={currentStep > 2}>3</Circle>
+                <Circle $active={currentStep == 2}>2</Circle>
                 <StepLabel>Finish</StepLabel>
             </Step>
             </ProgressContainer>
