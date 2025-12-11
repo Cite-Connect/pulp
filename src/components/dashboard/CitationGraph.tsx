@@ -30,9 +30,14 @@ export default function CitationGraph() {
     const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
     const containerRef = useRef<HTMLDivElement>(null);
     
+    // 1. Consume Data from Store instead of Props or Local State
     const { graphData } = useDashboardStore(); 
+    
+    // 2. We still use Selection Store to handle clicks on nodes
     const setSelectedNode = useSelectionStore((state) => state.setSelectedNode);
+    const { setInspectingPaper } = useDashboardStore(); // To trigger details view on click
 
+    // Resize Observer to handle layout changes
     useEffect(() => {
         if (!containerRef.current) return;
 
@@ -47,17 +52,19 @@ export default function CitationGraph() {
 
         resizeObserver.observe(containerRef.current);
         return () => resizeObserver.disconnect();
-    }, []);
+    }, [graphData]); // Re-measure if data changes
 
-    const handleNodeClick = async (nodeId: string | number | undefined) => {
+    const handleNodeClick = async (nodeId: string) => {
         try {
-            const paperDetails = await paperApi.fetchPaperDetails(String(nodeId));
-            console.log("Paper Details:", paperDetails);
+            // Fetch details and open the "Paper Details" view in Right Panel
+            const paperDetails = await paperApi.fetchPaperDetails(nodeId);
+            setInspectingPaper(paperDetails); 
         } catch (error) {
             console.error("Failed to fetch paper details:", error);
         }
     };
 
+    // Memoize nodes/links to prevent re-simulation on every render
     const nodesAndLinks = useMemo(() => {
         if (!graphData) return { nodes: [], links: [] };
         
@@ -89,6 +96,7 @@ export default function CitationGraph() {
                 nodeLabel="label"
                 nodeRelSize={6}
                 
+                // Fix types for nodeColor
                 nodeColor={(node: unknown) => {
                     const n = node as SimulationNode;
                     return n.type === 'central' ? '#ef4444' : (n.color || '#4f46e5');
@@ -102,10 +110,13 @@ export default function CitationGraph() {
                 d3VelocityDecay={0.3}
                 cooldownTicks={100}
                 
+                // Interactions
                 onNodeClick={(node: unknown) => {
                     const typedNode = node as GraphNode;
-                    handleNodeClick(typedNode.id);
+                    // 1. Update selection highlight
                     setSelectedNode(typedNode);
+                    // 2. Trigger the details panel
+                    handleNodeClick(typedNode.id);
                 }}
             />
             
@@ -123,6 +134,8 @@ export default function CitationGraph() {
         </GraphContainer>
     );
 }
+
+// --- STYLES ---
 
 const GraphContainer = styled.div`
     width: 100%;

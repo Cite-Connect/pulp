@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { FiList, FiStar, FiGitCommit } from 'react-icons/fi';
+import { FiList, FiStar, FiGitCommit, FiArrowLeft, FiShare2 } from 'react-icons/fi';
 import { graphApi } from '@/api/services/graph';
 import { paperApi } from '@/api/services/paper';
 import { RecommendedPaper, PaperDetails } from '@/api/interface/types';
@@ -15,37 +15,40 @@ export default function RightPanel() {
     const {
         setSelectedPaperId, 
         setGraphData,
-        isLoading,
-        setIsLoading,
+        isLoading, setIsLoading,
+        inspectingPaper, setInspectingPaper
     } = useDashboardStore();
     
     const { papers } = useFeedStore(); 
     
-    const [inspectingPaper, setInspectingPaper] = useState<PaperDetails | null>(null);
+    const [detailsLoading, setDetailsLoading] = useState(false);
 
     const handleCardClick = async (paper: PaperDetails) => {
-        handleVisualizeGraph(paper);
-        setIsLoading(true);
+        handleVisualizeGraph(paper)
+        setInspectingPaper(paper); 
+        setDetailsLoading(true);
+        
         try {
             const data = await paperApi.fetchPaperDetails(paper.paper_id);
             setInspectingPaper(data);
         } catch (error) {
             console.error("Failed to fetch details", error);
         } finally {
-            setIsLoading(false);
+            setDetailsLoading(false);
         }
     };
 
     const handleVisualizeGraph = async (paper: PaperDetails) => {
         const currentPaperId = paper.paper_id;
-
-        setInspectingPaper(null); 
+        
+        setInspectingPaper(null);
+        
+        setIsLoading(true);
         
         setSelectedPaperId(currentPaperId);
 
         try {
             const result = await graphApi.fetchGraphData(currentPaperId);
-            setIsLoading(true)
             setGraphData(result);
         } catch (error) {
             console.error("Failed to fetch graph", error);
@@ -58,10 +61,10 @@ export default function RightPanel() {
         setInspectingPaper(null);
     };
 
-    if (isLoading) {
+    if (isLoading || detailsLoading) {
         return (
             <Panel>
-                <Loader text="Fetching Paper Details..." />
+                <Loader text={isLoading ? "Generating Graph..." : "Fetching Details..."} />
             </Panel>
         );
     }
@@ -72,7 +75,6 @@ export default function RightPanel() {
                 <PaperDetailView 
                     paper={inspectingPaper} 
                     onBack={handleBackToList}
-                    // onVisualizeGraph={handleVisualizeGraph}
                 />
             </Panel>
         );
@@ -89,10 +91,7 @@ export default function RightPanel() {
             </PanelHeader>
 
             <ListContainer>
-            {isLoading ? (
-                <LoadingState>Generating Knowledge Graph...</LoadingState>
-            ) : (
-                (papers as RecommendedPaper[]).map((paper, index) => (
+                {(papers as RecommendedPaper[]).map((paper, index) => (
                     <RecCard key={paper.paper_id} onClick={() => handleCardClick(paper)}>
                         <RecHeader>
                             <RankBadge>#{index + 1}</RankBadge>
@@ -112,13 +111,13 @@ export default function RightPanel() {
                         )}
                         <RecMeta>{paper.venue || 'Journal'} • {paper.year}</RecMeta>
                     </RecCard>
-                ))
-            )}
+                ))}
             </ListContainer>
         </Panel>
         );
     }
 
+    // 4. ZERO STATE
     return (
         <Panel>
             <EmptyStateContainer>
@@ -130,6 +129,8 @@ export default function RightPanel() {
         </Panel>
     );
 }
+
+// --- STYLES ---
 
 const Panel = styled.aside`
     background-color: white;

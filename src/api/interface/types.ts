@@ -165,3 +165,93 @@ export interface RecommendationsResponse {
     recommendations: RecommendedPaper[];
     metadata: RecommendationMetadata;
 }
+
+export type InteractionType = 
+    | 'cite' 
+    | 'save' 
+    | 'download' 
+    | 'like' 
+    | 'click' 
+    | 'view' 
+    | 'dismiss' 
+    | 'not_interested';
+
+export interface InteractionContext {
+    source?: string; // e.g. "search_results", "recommendations", "citation_graph"
+    position?: number;
+    session_id?: string;
+}
+
+export interface TrackInteractionPayload {
+    paper_id: string;
+    interaction_type: InteractionType;
+    duration_seconds?: number;
+    context?: InteractionContext;
+}
+
+export interface TrackInteractionResponse {
+    interaction_id: number;
+    user_id: number;
+    paper_id: string;
+    interaction_type: InteractionType;
+    strength: number;
+    embedding_update_triggered: boolean;
+    message: string;
+}
+
+export interface InteractionHistoryItem {
+    interaction_id: number;
+    paper_id: string;
+    interaction_type: InteractionType;
+    interaction_strength: number;
+    created_at: string;
+    duration_seconds?: number;
+    source?: string;
+    position?: number;
+}
+
+export interface InteractionHistoryResponse {
+    user_id: number;
+    interaction_count: number;
+    interactions: InteractionHistoryItem[];
+}
+
+export interface InteractionStatisticsResponse {
+    user_id: number;
+    period_days: number;
+    total_interactions: number;
+    positive_interactions: number;
+    negative_interactions: number;
+    meaningful_interactions: number;
+    domains_explored: number;
+    interaction_breakdown: Record<InteractionType, number>;
+    engagement_rate: number;
+}
+
+export interface SavedPaperItem {
+    paper_id: string;
+    title: string;
+    authors: string[];
+    abstract: string;
+    publication_date: string;
+    saved_at: string;
+    citation_count: number;
+    url: string;
+}
+
+export interface SavedPapersResponse {
+    user_id: number;
+    saved_count: number;
+    saved_papers: SavedPaperItem[];
+}
+
+export interface RemoveFilterResponse {
+    user_id: number;
+    paper_id: string;
+    message: string;
+}
+
+export interface HistoryParams {
+    limit?: number;
+    min_strength?: number;
+}

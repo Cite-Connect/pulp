@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // <--- Added useEffect, useRef
 import styled from 'styled-components';
 import { FiShare2, FiArrowLeft, FiBookmark, FiCheck, FiThumbsUp, FiThumbsDown } from 'react-icons/fi';
 import { PaperDetails } from '@/api/interface/types';
 import { useLibraryStore } from '@/store/useLibraryStore';
+import { interactionsApi } from '@/api/services/interactions';
+import { TrackInteractionPayload } from '@/api/interface/types';
 
 interface PaperDetailViewProps {
     paper: PaperDetails;
@@ -14,11 +16,82 @@ interface PaperDetailViewProps {
 export default function PaperDetailView({ paper, onBack }: PaperDetailViewProps) {
     const { savedPapers, toggleSave } = useLibraryStore();
     const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
+    
+    const hasLoggedView = useRef(false);
 
     const isPaperSaved = savedPapers.some(p => p.paper_id === paper.paper_id);
 
-    const handleFeedback = (type: 'like' | 'dislike') => {
-        setFeedback(prev => (prev === type ? null : type));
+    useEffect(() => {
+        const startTime = Date.now();
+        hasLoggedView.current = false;
+
+        return () => {
+            const endTime = Date.now();
+            const durationSeconds = Math.round((endTime - startTime) / 1000);
+
+                const user_id = localStorage.getItem('userId') || null;
+
+            if (durationSeconds >= 2 && !hasLoggedView.current) {
+                hasLoggedView.current = true;
+
+                const payload: TrackInteractionPayload = {
+                    paper_id: paper.paper_id,
+                    interaction_type: 'view',
+                    duration_seconds: durationSeconds,
+                    context: { 
+                        source: 'search',
+                        session_id: localStorage.getItem('sessionId') || undefined,
+                    }
+                }
+                
+                interactionsApi.trackInteraction(
+                    payload,
+                    user_id
+                ).catch(err => console.error('Failed to track view duration:', err));
+            }
+        };
+    }, [paper.paper_id]);
+
+    const user_id = localStorage.getItem('userId') || null;
+
+    const handleSave = async () => {
+        toggleSave(paper);
+
+        if (!isPaperSaved) {
+            try {
+                await interactionsApi.trackInteraction({
+                    paper_id: paper.paper_id,
+                    interaction_type: 'save',
+                    context: {
+                        source: 'search',
+                        session_id: localStorage.getItem('sessionId') || undefined
+                    }
+                }, user_id);
+            } catch (err) {
+                console.error("Failed to track save interaction", err);
+            }
+        }
+    };
+
+    const handleFeedback = async (type: 'like' | 'dislike') => {
+        const newFeedback = feedback === type ? null : type;
+        setFeedback(newFeedback);
+
+        if (newFeedback) {
+            try {
+                const interactionType = newFeedback === 'like' ? 'like' : 'not_interested';
+                await interactionsApi.trackInteraction({
+                    paper_id: paper.paper_id,
+                    interaction_type: interactionType,
+                    context: {
+                        source: 'search',
+                        session_id: localStorage.getItem('sessionId') || undefined
+                    }
+                }, user_id);
+            } catch (err) {
+                console.error(`Failed to track ${type} interaction`, err);
+            }
+        }
     };
 
     return (
@@ -52,21 +125,21 @@ export default function PaperDetailView({ paper, onBack }: PaperDetailViewProps)
                 </p>
 
                 <ActionRow>
-                <ActionButton 
-                    onClick={() => toggleSave(paper)} 
-                    $active={isPaperSaved}
-                >
-                    {isPaperSaved ? <FiCheck size={14} /> : <FiBookmark size={14} />}
-                    {isPaperSaved ? 'Saved' : 'Save'}
-                </ActionButton>
+                    <ActionButton 
+                        onClick={handleSave} 
+                        $active={isPaperSaved}
+                    >
+                        {isPaperSaved ? <FiCheck size={14} /> : <FiBookmark size={14} />}
+                        {isPaperSaved ? 'Saved' : 'Save'}
+                    </ActionButton>
 
-                <ActionButton onClick={() => handleFeedback('like')} $active={feedback === 'like'}>
-                    <FiThumbsUp size={14} />
-                </ActionButton>
+                    <ActionButton onClick={() => handleFeedback('like')} $active={feedback === 'like'}>
+                        <FiThumbsUp size={14} />
+                    </ActionButton>
 
-                <ActionButton onClick={() => handleFeedback('dislike')} $active={feedback === 'dislike'}>
-                    <FiThumbsDown size={14} />
-                </ActionButton>
+                    <ActionButton onClick={() => handleFeedback('dislike')} $active={feedback === 'dislike'}>
+                        <FiThumbsDown size={14} />
+                    </ActionButton>
                 </ActionRow>
 
                 {paper.tldr && (
@@ -197,24 +270,4 @@ const AspectTag = styled.span`
     margin-right: 0.5rem;
     margin-bottom: 0.5rem;
     display: inline-block;
-`;
-
-const PrimaryButton = styled.button`
-    width: 100%;
-    padding: 12px;
-    background: #1a1a1a;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &:hover {
-        background: #000;
-        transform: translateY(-1px);
-    }
 `;

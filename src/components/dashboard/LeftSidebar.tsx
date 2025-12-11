@@ -27,7 +27,7 @@ export default function LeftSidebar() {
             <FiSettings /> <span>Settings</span>
         </NavItem>
 
-        <SectionTitle>Recent Activity</SectionTitle>
+        {/* <SectionTitle>Recent Activity</SectionTitle>
         <HistoryItem>
             <HistoryTitle>Transformers in Finance</HistoryTitle>
             <HistoryMeta>Viewed 2h ago</HistoryMeta>
@@ -35,7 +35,7 @@ export default function LeftSidebar() {
         <HistoryItem>
             <HistoryTitle>Quantum Error Correction</HistoryTitle>
             <HistoryMeta>Viewed 5h ago</HistoryMeta>
-        </HistoryItem>
+        </HistoryItem> */}
     </Panel>
     );
 }

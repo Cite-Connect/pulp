@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import { FiTrash2, FiExternalLink, FiBookOpen } from 'react-icons/fi';
+import { FiTrash2, FiBookOpen } from 'react-icons/fi';
 
 // 1. Re-use your existing components to keep the UI consistent
 import LeftSidebar from '@/components/dashboard/LeftSidebar'; 

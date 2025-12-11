@@ -39,8 +39,8 @@ export default function FloatingSearch() {
                     search_query: query,
                     user_id: Number(userId),
                     count: 10,
-                    model_preference: 'specter',
-                    session_id: generateSessionId(userId!),
+                    model_preference: 'minilm',
+                    session_id: generateSessionId(userId),
                 });
 
                 // Update the main feed with AI recommendations

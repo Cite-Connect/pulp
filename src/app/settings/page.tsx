@@ -11,6 +11,8 @@ export default function SettingsPage() {
     const router = useRouter();
     const handleLogout = () => {
         localStorage.removeItem('authToken');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('sessionId');
         router.push('/login');
     }
     return (
