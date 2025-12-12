@@ -28,7 +28,7 @@ export default function Home() {
           </HeroTitle>
           <HeroSubtitle>
             Stop drowning in PDF lists. Discover, visualize, and understand academic 
-            literature with AI-powered semantic search and interactive citation graphs.
+            literature with semantic search and interactive citation graphs.
           </HeroSubtitle>
           
           <ButtonGroup>
@@ -53,7 +53,7 @@ export default function Home() {
             </FloatingCard>
             <FloatingCard $top={10} $left={70} $delay={4}>
               <FiCpu size={24} />
-              <CardText>AI Explainability</CardText>
+              <CardText>Personalised Explainability</CardText>
             </FloatingCard>
             
             <CenterOrb />
@@ -96,9 +96,9 @@ export default function Home() {
             <IconBox $color="#db2777">
               <FiCpu color="white" size={24} />
             </IconBox>
-            <CardTitle>AI Explanations</CardTitle>
+            <CardTitle>Personalised Explanations</CardTitle>
             <CardDescription>
-              Skip the abstract skimming. Get instant, LLM-generated summaries 
+              Skip the abstract skimming. Get instant, summaries 
               explaining exactly <i>why</i> a paper matches your research interests.
             </CardDescription>
           </FeatureCard>
@@ -123,7 +123,7 @@ export default function Home() {
               <CompItem><Check /> Top 20 context-aware results</CompItem>
               <CompItem><Check /> Natural language queries</CompItem>
               <CompItem><Check /> Instant visual knowledge graphs</CompItem>
-              <CompItem><Check /> Recommendations based on <i>your</i> profile</CompItem>
+              <CompItem><Check /> Recommendations based on <b> your </b> profile</CompItem>
             </CompList>
           </RightComp>
         </ComparisonContainer>
