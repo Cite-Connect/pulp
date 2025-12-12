@@ -4,7 +4,6 @@ import React from 'react';
 import styled from 'styled-components';
 import CitationGraph from '@/components/dashboard/CitationGraph';
 
-// Simple styling for the dashboard content area
 const DashboardContainer = styled.div`
     padding: 2rem;
     width: 100%;
@@ -34,7 +33,6 @@ export default function DashboardPage() {
                 <p>Visualizing relationships for you</p>
             </Header>
             
-            {/* This renders the graph component we built */}
             <CitationGraph />
         </DashboardContainer>
     );

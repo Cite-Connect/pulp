@@ -21,7 +21,6 @@ export default function LibraryList() {
         <SavedItem 
             key={paper.paper_id}
             onClick={() => {
-                // Click to view details
                 setSelectedNode({
                     ...paper, 
                     label: paper.title 

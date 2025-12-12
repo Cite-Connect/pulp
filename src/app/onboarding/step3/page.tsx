@@ -5,12 +5,35 @@ import styled, { keyframes } from 'styled-components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
+import { paperApi } from '@/api/services/paper';
+import { useRecommendationStore } from '@/store/useRecommendationStore';
+import { useFeedStore } from '@/store/useFeedStore';
+import { generateSessionId } from '@/utils/session';
 
 export default function Step3Page() {
     const router = useRouter();
     
-    // Read Store Data
+
     const { role, domain, scholarLinked } = useOnboardingStore();
+    const { setRecommendations } = useRecommendationStore();
+    const { setPapers } = useFeedStore();
+
+    const handleDashboardLaunch = async () => {
+        const rawId = localStorage.getItem('userId');
+        const userId = rawId ? Number(rawId) : 0;
+        
+        const response = await paperApi.getRecommendations({
+            search_query: domain,
+            user_id: userId,
+            count: 10,
+            model_preference: 'specter',
+            session_id: generateSessionId(userId),
+        });
+
+        setRecommendations(response.recommendations, response.metadata);
+        setPapers(response.recommendations);
+        router.push('/dashboard');
+    }
 
     return (
         <Wrapper>
@@ -31,7 +54,6 @@ export default function Step3Page() {
             
             <CardRow>
             <RowLabel>Domain of Interest</RowLabel>
-            {/* Display the single domain badge */}
             {domain ? (
                 <DomainBadge>{domain}</DomainBadge>
             ) : (
@@ -42,16 +64,9 @@ export default function Step3Page() {
             <Divider />
         </SummaryCard>
 
-        <InfoBox>
-            <InfoIcon>💡</InfoIcon>
-            <InfoText>
-            <strong>Pro Tip:</strong> You can always update your domain settings later in the preferences menu.
-            </InfoText>
-        </InfoBox>
-
         <Footer>
             <Link href="/dashboard" passHref>
-            <LaunchButton onClick={() => router.replace('/dashboard')}>
+            <LaunchButton onClick={() => handleDashboardLaunch()}>
                 Launch Dashboard
                 <ArrowIcon viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -146,42 +161,6 @@ const DomainBadge = styled.span`
     background-color: #111827; /* Dark Background */
     color: #ffffff; /* White Text */
 `;
-
-const StatusBadge = styled.div<{ $active: boolean }>`
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: ${props => props.$active ? '#059669' : '#6b7280'};
-`;
-
-const StatusDot = styled.span`
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background-color: #10b981;
-    box-shadow: 0 0 0 2px #d1fae5;
-`;
-
-const InfoBox = styled.div`
-    display: flex;
-    gap: 0.75rem;
-    padding: 1rem;
-    background-color: #fffbeb;
-    border: 1px solid #fcd34d;
-    border-radius: 0.5rem;
-    color: #92400e;
-    font-size: 0.875rem;
-    line-height: 1.4;
-    align-items: center;
-`;
-
-const InfoIcon = styled.span`
-    font-size: 1.25rem;
-`;
-
-const InfoText = styled.p``;
 
 const Footer = styled.div`
     padding-top: 1rem;

@@ -138,7 +138,7 @@ export interface RecommendationPayload {
     count: number;            // Default 10
     model_preference?: 'minilm' | 'specter';
     search_query: string;
-    session_id: string;
+    session_id: string | null;
 }
 
 export interface ScoreBreakdown {

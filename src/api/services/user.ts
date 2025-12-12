@@ -19,10 +19,11 @@ const READING_MAPPING: Record<string, string> = {
 const RESEARCH_STAGE: Record<string, string> = {
     "Bachelor's Student": 'undergraduate',
     "Master's Student": 'masters',
-    'PhD Candidate': 'postdoc',
+    'PhD Candidate': 'phd',
     'Professor': 'professor',
     'Industry Researcher': 'industry',
-    'Researcher': 'independent',
+    'Researcher': 'postdoc',
+    'Industry Professional': 'independent',
 };
 
 export const userApi = {

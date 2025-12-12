@@ -4,11 +4,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { FiSearch, FiLoader, FiChevronDown } from 'react-icons/fi';
 import { paperApi } from '@/api/services/paper';
-import { authApi } from '@/api/services/auth';
-import { generateSessionId } from '@/utils/session';
 import { useFeedStore } from '@/store/useFeedStore';
 import { useRecommendationStore } from '@/store/useRecommendationStore';
-import { useDashboardStore } from '@/store/useDashboardStore'; // <--- 1. Import Dashboard Store
+import { useDashboardStore } from '@/store/useDashboardStore';
+import { generateSessionId } from '@/utils/session';
 
 export default function FloatingSearch() {
     const [query, setQuery] = useState('');
@@ -52,7 +51,7 @@ export default function FloatingSearch() {
                     user_id: userId,
                     count: 10,
                     model_preference: selectedModel === 'specter' ? 'specter' : 'minilm',
-                    session_id: generateSessionId(userId),
+                    session_id: localStorage.getItem('sessionId') || generateSessionId(userId),
                 });
 
                 setRecommendations(response.recommendations, response.metadata);
