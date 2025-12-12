@@ -27,56 +27,12 @@ export default function LibraryPage() {
             <LeftSidebar />
 
             <MainContent>
-            <Header>
-                <h1>My Library</h1>
-                <StatsRow>
-                <span>{savedPapers.length} Papers Saved</span>
-                </StatsRow>
-            </Header>
-
-            {savedPapers.length === 0 ? (
-                <EmptyState>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.2 }}>📚</div>
-                <h3>Your library is empty</h3>
-                <p>Go back to the dashboard to explore and save papers.</p>
-                <Link href="/dashboard" style={{ 
-                    background: '#1a1a1a', color: 'white', padding: '10px 20px', 
-                    borderRadius: '6px', textDecoration: 'none', fontWeight: 600 
-                }}>
-                    Browse Dashboard
-                </Link>
-                </EmptyState>
-            ) : (
-                <PaperGrid>
-                {savedPapers.map((paper) => (
-                    <PaperCard key={paper.paper_id}>
-                    <DomainBadge>{paper.domain}</DomainBadge>
-                    
-                    <PaperTitle>
-                        {paper.title.length > 60 ? paper.title.slice(0, 60) + '...' : paper.title}
-                    </PaperTitle>
-                    
-                    <PaperMeta>
-                        {paper.year} • {paper.citation_count} Citations
-                    </PaperMeta>
-
-                    <CardActions>
-                        {/* Link to view on graph (Optional - sends you back to dashboard with ID) */}
-                        <Link href={`/dashboard?paperId=${paper.paper_id}`} style={{ 
-                            display: 'flex', alignItems: 'center', gap: '5px', 
-                            fontSize: '0.8rem', color: '#2196f3', textDecoration: 'none', fontWeight: 600 
-                        }}>
-                        <FiBookOpen /> View Graph
-                        </Link>
-
-                        <RemoveButton onClick={() => toggleSave(paper)}>
-                        <FiTrash2 /> Remove
-                        </RemoveButton>
-                    </CardActions>
-                    </PaperCard>
-                ))}
-                </PaperGrid>
-            )}
+                <Header>
+                    <h1>My Library</h1>
+                    <StatsRow>
+                    <span>Feature Coming Soon</span>
+                    </StatsRow>
+                </Header>
             </MainContent>
         </PageContainer>
         </AuthGuard>
@@ -95,6 +51,9 @@ const MainContent = styled.main`
     padding: 3rem 4rem;
     overflow-y: auto;
     background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 `;
 
 const Header = styled.header`

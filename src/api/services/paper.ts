@@ -1,5 +1,5 @@
 import { apiClientV1 } from "./core";
-import { PaperDetails, RecommendationsResponse, RecommendationPayload } from "../interface/types";
+import { PaperDetails, RecommendationsResponse, RecommendationPayload, SavedPapersResponse, SavedPaperItem } from "../interface/types";
 import { getAuthHeaders } from "./auth";
 
 export const paperApi = {
@@ -20,9 +20,9 @@ export const paperApi = {
         return response.data;
     },
 
-    getSavedPapers: async (user_id: string | null): Promise<PaperDetails[]> => {
-        const response = await apiClientV1.get<PaperDetails[]>(
-            `/saved/${user_id}`,
+    getSavedPapers: async (user_id: string | null): Promise<SavedPapersResponse[]> => {
+        const response = await apiClientV1.get<SavedPapersResponse[]>(
+            `interactions/saved?user_id=${user_id}`,
             {
                 headers: getAuthHeaders(),
             }

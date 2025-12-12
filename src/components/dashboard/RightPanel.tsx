@@ -19,8 +19,9 @@ export default function RightPanel() {
         inspectingPaper, setInspectingPaper
     } = useDashboardStore();
     
-    const { results: recommendations } = useRecommendationStore(); 
-    
+    const { results: recommendations } = useRecommendationStore();
+    const paperIds = recommendations.map((paper) => paper.paper_id);
+
     const [detailsLoading, setDetailsLoading] = useState(false);
 
     const handleCardClick = async (paper: PaperDetails) => {
@@ -48,7 +49,7 @@ export default function RightPanel() {
         setSelectedPaperId(currentPaperId);
 
         try {
-            const result = await graphApi.fetchGraphData(currentPaperId);
+            const result = await graphApi.fetchGraphData(currentPaperId, paperIds);
             setGraphData(result);
         } catch (error) {
             console.error("Failed to fetch graph", error);
@@ -88,7 +89,6 @@ export default function RightPanel() {
             </PanelHeader>
 
             <ListContainer>
-                {/* 4. Map over recommendations from store */}
                 {(recommendations as RecommendedPaper[]).map((paper, index) => (
                     <RecCard key={paper.paper_id} onClick={() => handleCardClick(paper)}>
                         <RecHeader>

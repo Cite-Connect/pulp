@@ -92,7 +92,7 @@ export default function FloatingSearch() {
                         disabled={isSearching}
                     >
                         <option value="specter">Specter (Recommended)</option>
-                        <option value="llama">Llama Model</option>
+                        <option value="llama">all minilm</option>
                     </ModelSelect>
                     <FiChevronDown size={14} className="chevron" />
                 </SelectWrapper>

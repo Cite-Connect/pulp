@@ -239,6 +239,8 @@ export interface SavedPaperItem {
     saved_at: string;
     citation_count: number;
     url: string;
+    domain: string;
+    year: number;
 }
 
 export interface SavedPapersResponse {
@@ -256,4 +258,12 @@ export interface RemoveFilterResponse {
 export interface HistoryParams {
     limit?: number;
     min_strength?: number;
+}
+
+export interface GraphPayload {
+    depth: number;
+    max_nodes?: number;
+    include_metadata?: boolean;
+    embedding_model?: string;
+    recommended_papers?: string[];
 }

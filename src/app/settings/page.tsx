@@ -8,10 +8,14 @@ import { FiArrowLeft, FiUser, FiGlobe, FiLogOut, FiBriefcase } from 'react-icons
 import AuthGuard from '@/components/auth/AuthGuard';
 import { GetProfileResponse, UserProfile } from '@/api/interface/types'; // Updated import
 import { userApi } from '@/api/services/user';
+import { useRecommendationStore } from '@/store/useRecommendationStore';
+import { useFeedStore } from '@/store/useFeedStore';
 
 export default function SettingsPage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const { clearRecommendations } = useRecommendationStore();
+    const { setPapers } = useFeedStore();
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -39,6 +43,7 @@ export default function SettingsPage() {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('userId');
         router.push('/login');
+        clearRecommendations()
     }
 
     const formatValue = (val?: string) => {

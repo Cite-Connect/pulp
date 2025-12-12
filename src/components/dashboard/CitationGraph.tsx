@@ -90,7 +90,8 @@ export default function CitationGraph() {
                 
                 nodeColor={(node: unknown) => {
                     const n = node as SimulationNode;
-                    return n.type === 'central' ? '#ef4444' : (n.color || '#4f46e5');
+                    // return n.type === 'central' ? '#ef4444' : (n.color || '#4f46e5');
+                    return n.color || '#4f46e5';
                 }}
                 
                 linkColor={() => '#cbd5e1'}
@@ -117,6 +118,9 @@ export default function CitationGraph() {
                 </LegendItem>
                 <LegendItem>
                     <Dot $color="#4ECDC4" /> Reference
+                </LegendItem>
+                <LegendItem>
+                    <Dot $color="#FFD93D" /> Recommended
                 </LegendItem>
             </Legend>
         </GraphContainer>

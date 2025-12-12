@@ -16,12 +16,12 @@ interface PaperDetailViewProps {
 export default function PaperDetailView({ paper, onBack }: PaperDetailViewProps) {
     const { savedPapers, toggleSave } = useLibraryStore();
     const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
-    const { score_breakdown } = paper;
-    console.log('Score Breakdown:', paper);
     
     const hasLoggedView = useRef(false);
 
     const isPaperSaved = savedPapers.some(p => p.paper_id === paper.paper_id);
+
+    const { score_breakdown } = paper;
 
     useEffect(() => {
         const startTime = Date.now();
@@ -31,7 +31,7 @@ export default function PaperDetailView({ paper, onBack }: PaperDetailViewProps)
             const endTime = Date.now();
             const durationSeconds = Math.round((endTime - startTime) / 1000);
 
-                const user_id = localStorage.getItem('userId') || null;
+            const user_id = localStorage.getItem('userId') || null;
 
             if (durationSeconds >= 2 && !hasLoggedView.current) {
                 hasLoggedView.current = true;
